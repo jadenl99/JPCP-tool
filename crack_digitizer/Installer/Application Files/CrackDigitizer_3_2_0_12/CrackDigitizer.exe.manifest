@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<asmv1:assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns="urn:schemas-microsoft-com:asm.v2" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v2="urn:schemas-microsoft-com:clickonce.v2">
+  <asmv1:assemblyIdentity name="CrackDigitizer.exe" version="3.2.0.12" publicKeyToken="370cdfb890cbb95d" language="neutral" processorArchitecture="x86" type="win32" />
+  <application />
+  <entryPoint>
+    <assemblyIdentity name="CrackDigitizer" version="1.0.0.0" language="neutral" processorArchitecture="x86" />
+    <commandLine file="CrackDigitizer.exe" parameters="" />
+  </entryPoint>
+  <trustInfo>
+    <security>
+      <applicationRequestMinimum>
+        <PermissionSet Unrestricted="true" ID="Custom" SameSite="site" />
+        <defaultAssemblyRequest permissionSetReference="Custom" />
+      </applicationRequestMinimum>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!--
+          UAC Manifest Options
+          If you want to change the Windows User Account Control level replace the 
+          requestedExecutionLevel node with one of the following.
+
+        <requestedExecutionLevel  level="asInvoker" uiAccess="false" />
+        <requestedExecutionLevel  level="requireAdministrator" uiAccess="false" />
+        <requestedExecutionLevel  level="highestAvailable" uiAccess="false" />
+
+         If you want to utilize File and Registry Virtualization for backward 
+         compatibility then delete the requestedExecutionLevel node.
+    -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <dependency>
+    <dependentOS>
+      <osVersionInfo>
+        <os majorVersion="5" minorVersion="1" buildNumber="2600" servicePackMajor="0" />
+      </osVersionInfo>
+    </dependentOS>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="preRequisite" allowDelayedBinding="true">
+      <assemblyIdentity name="Microsoft.Windows.CommonLanguageRuntime" version="4.0.30319.0" />
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="CrackDigitizer.exe" size="250272">
+      <assemblyIdentity name="CrackDigitizer" version="1.0.0.0" language="neutral" processorArchitecture="x86" />
+      <hash>
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>n8mZkiGKOnElZOvGQ7IxErnwnoQ=</dsig:DigestValue>
+      </hash>
+    </dependentAssembly>
+  </dependency>
+  <file name="CrackDigitizer.exe.config" size="2120">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>ED1OQtJPpNh0EIIQt62ey6JaU2o=</dsig:DigestValue>
+    </hash>
+  </file>
+  <file name="FreeImage.dll" size="1056768">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>IL7+bu7mwPnUnDZkQ9xusEeoYXI=</dsig:DigestValue>
+    </hash>
+  </file>
+  <file name="LcmsAnalyserLibAdv.dll" size="14024192">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>IttfWqsTOTYPccG+NNV2KmzKmaM=</dsig:DigestValue>
+    </hash>
+  </file>
+  <file name="License.txt" size="170">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>9DKNcu/ShxnCltS2UqjMZAGEC6c=</dsig:DigestValue>
+    </hash>
+  </file>
+  <file name="LRMSLib.dll" size="4381696">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>JwnWGGtzO6tye12Rf88/rX1D6+k=</dsig:DigestValue>
+    </hash>
+  </file>
+<publisherIdentity name="CN=AD\achatterjee36" issuerKeyHash="770ca361779b083b2facaa22d49ce7de0d0878a3" /><Signature Id="StrongNameSignature" xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><DigestValue>6inHCnnckYq+YXk5CfTjQL/HgFM=</DigestValue></Reference></SignedInfo><SignatureValue>W6n/t8bdSFnHOT3tu1xNp3hZJecnU6G0LBp9kDuyzaMFws6oQYvpPQu6+5U+Z9LpAEVAu2aZcDQvqW9QoGn/5nynqSiT2EsrlybBnnEi3Yrm/aqHNTI7U5h/MU760wz/TnFVcPsU4tWmpXhALherMp+SfV7rpvl529a2wkwNcYQ=</SignatureValue><KeyInfo Id="StrongNameKeyInfo"><KeyValue><RSAKeyValue><Modulus>uSdiTcjt7pR+6Z2xuCbhPSuVxbxwi+Y9LnFhrMitpLCuzCM3Vv46P+WGyzUnLEU0RuW+WC3QiuF0u8WSKcjQTUFTyvW0hhM9N4yaKuJIBu7zIt2Rv5g2T6MRm+KIuOG/ymTzFJQIEeG5u9nve7RqesPb9nF4KaWkSYgCUJ00shU=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><msrel:RelData xmlns:msrel="http://schemas.microsoft.com/windows/rel/2005/reldata"><r:license xmlns:r="urn:mpeg:mpeg21:2003:01-REL-R-NS" xmlns:as="http://schemas.microsoft.com/windows/pki/2005/Authenticode"><r:grant><as:ManifestInformation Hash="5380c7bf40e3f409397961be8a91dc790ac729ea" Description="" Url=""><as:assemblyIdentity name="CrackDigitizer.exe" version="3.2.0.12" publicKeyToken="370cdfb890cbb95d" language="neutral" processorArchitecture="x86" type="win32" /></as:ManifestInformation><as:SignedBy /><as:AuthenticodePublisher><as:X509SubjectName>CN=AD\achatterjee36</as:X509SubjectName></as:AuthenticodePublisher></r:grant><r:issuer><Signature Id="AuthenticodeSignature" xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" /><DigestValue>bY6qbL64sIEN+yXf/qj2Ckmt6hY=</DigestValue></Reference></SignedInfo><SignatureValue>WwHEvXw9gGvY+rytJBifwQ+q7h1Gh0uTGijIM6orZSmyyNE4YOfTyJcI78oz9BYeNTqfX5qmL/qhsEkIJANVxezUIFSmjZzC07fRsslqpNI8DBgE54mVVux+2iZMjmTxtYePVOsTtjpGt1MndV5DDtNVB5MlT8ivpOQfMBlN8jw=</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>uSdiTcjt7pR+6Z2xuCbhPSuVxbxwi+Y9LnFhrMitpLCuzCM3Vv46P+WGyzUnLEU0RuW+WC3QiuF0u8WSKcjQTUFTyvW0hhM9N4yaKuJIBu7zIt2Rv5g2T6MRm+KIuOG/ymTzFJQIEeG5u9nve7RqesPb9nF4KaWkSYgCUJ00shU=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIB2TCCAUKgAwIBAgIQS/m+wEzghY1D7Nj8S+GHnTANBgkqhkiG9w0BAQUFADArMSkwJwYDVQQDHiAAQQBEAFwAYQBjAGgAYQB0AHQAZQByAGoAZQBlADMANjAeFw0xOTA2MDMyMDAzMTFaFw0yMDA2MDMwMjAzMTFaMCsxKTAnBgNVBAMeIABBAEQAXABhAGMAaABhAHQAdABlAHIAagBlAGUAMwA2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC5J2JNyO3ulH7pnbG4JuE9K5XFvHCL5j0ucWGsyK2ksK7MIzdW/jo/5YbLNScsRTRG5b5YLdCK4XS7xZIpyNBNQVPK9bSGEz03jJoq4kgG7vMi3ZG/mDZPoxGb4oi44b/KZPMUlAgR4bm72e97tGp6w9v2cXgppaRJiAJQnTSyFQIDAQABMA0GCSqGSIb3DQEBBQUAA4GBADXw3s+8vB56GzAf6yUxg8YnMhAOs6v2VAuKKFdUCGsOztcYBbVoAcO6QJjr6T9aGBSXWJGHuJZ0dnoH3fJ8ACVFQ7tqzB+4DtSJk7nHhl1xwODoeY+eRyzo55GjRe9vIhgGDWTG//8F4gBM6wnQEYV6f78BMzoTAubmvgH+genD</X509Certificate></X509Data></KeyInfo></Signature></r:issuer></r:license></msrel:RelData></KeyInfo></Signature></asmv1:assembly>

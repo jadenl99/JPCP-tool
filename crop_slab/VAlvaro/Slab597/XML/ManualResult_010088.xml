@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ManualResults>
+  <GPSCoordinates>
+    <X>0</X>
+    <Y>0</Y>
+  </GPSCoordinates>
+  <LaneMarkInformation>
+    <LaneMark>
+      <LaneSide>Left</LaneSide>
+      <Position>0.000</Position>
+      <Type>0</Type>
+    </LaneMark>
+    <LaneMark>
+      <LaneSide>Right</LaneSide>
+      <Position>3508.000</Position>
+      <Type>1</Type>
+    </LaneMark>
+  </LaneMarkInformation>
+  <CrackInformation>
+    <CrackList />
+  </CrackInformation>
+  <SealedCrackInformation>
+    <SealedCrackList />
+  </SealedCrackInformation>
+  <ConcreteJointInformation>
+    <JointList>
+      <Joint>
+        <X1>20.0</X1>
+        <Y1>2080.0</Y1>
+        <X2>2080.0</X2>
+        <Y2>2484.0</Y2>
+        <Length>2099.2</Length>
+        <AverageFaulting>0.0</AverageFaulting>
+      </Joint>
+      <Joint>
+        <X1>2080.0</X1>
+        <Y1>2464.0</Y1>
+        <X2>3504.0</X2>
+        <Y2>2744.0</Y2>
+        <Length>1451.3</Length>
+        <AverageFaulting>0.0</AverageFaulting>
+      </Joint>
+    </JointList>
+  </ConcreteJointInformation>
+  <SpallInformation>
+    <SpallList />
+  </SpallInformation>
+</ManualResults>
