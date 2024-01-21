@@ -1,4 +1,4 @@
-cdimport argparse
+import argparse
 import os
 from crop_slab.crop_slab_image import CropSlabs
 from crop_slab.continuous_range import ContinuousRange

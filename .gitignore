@@ -10,3 +10,5 @@
 
 # Built Visual Studio Code Extensions
 *.vsix
+/crop_slab/VAlvaro/crop_slab/__pycache__
+/crop_slab/VAlvaro/crop_slab/utils/__pycache__

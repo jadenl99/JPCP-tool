@@ -29,7 +29,7 @@ class CropSlabs:
         #    self.xml_path = os.path.join(self.data_path, "ManualXML")
         # except:
         self.xml_path = os.path.join(self.data_path, "XML")
-
+        
         self.img_list = self.filter_files(self.range_path, "jpg")
         self.xml_list = self.filter_files(self.xml_path, "xml")
 
@@ -262,7 +262,7 @@ class CropSlabs:
                                                         int(bot_v_right_joint),
                                                         padding=0)
                             if new_im is not None:
-                                new_slab_path = os.path.join(self.slab_path, str(self.slab_num) + '.png')
+                                new_slab_path = os.path.join(self.slab_path, str(self.slab_num) + '.jpg')
                                 debug_file.write(new_slab_path + "\n")
                                 cv2.imwrite(new_slab_path, new_im)
                             self.y_offset = slab_offset
@@ -293,7 +293,7 @@ class CropSlabs:
                                                         int(bot_v_right_joint),
                                                         padding=0)
                             if new_im is not None:
-                                new_slab_path = os.path.join(self.slab_path, str(self.slab_num) + '.png')
+                                new_slab_path = os.path.join(self.slab_path, str(self.slab_num) + '.jpg')
                                 debug_file.writelines([new_slab_path, "\n"])
                                 cv2.imwrite(new_slab_path, new_im)
                             self.y_offset = slab_offset
@@ -330,7 +330,8 @@ class CropSlabs:
                                                     int(bot_v_right_joint),
                                                     padding=0)
                         if new_im is not None:
-                            new_slab_path = os.path.join(self.slab_path, str(self.slab_num) + '.png')
+                            # TODO: consider changing to .jpg to save space
+                            new_slab_path = os.path.join(self.slab_path, str(self.slab_num) + '.jpg')
                             debug_file.writelines([str(new_slab_path), "\n"])
                             cv2.imwrite(new_slab_path, new_im)
                         self.y_offset = slab_offset
