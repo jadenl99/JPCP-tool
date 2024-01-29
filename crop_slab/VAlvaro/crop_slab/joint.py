@@ -17,7 +17,7 @@ class HorizontalJoint:
         left_bound (int): left boundary of the lane/joint
         right_bound (int): right boundary of the lane/joint
     """
-    def __init__(self, subjoints: list=[], left_bound: int=0, right_bound: int=3500):
+    def __init__(self, subjoints, left_bound: int=0, right_bound: int=3500):
         self.subjoints = subjoints
         self.left_bound = left_bound
         self.right_bound = right_bound
@@ -35,7 +35,7 @@ class HorizontalJoint:
         self.subjoints.sort(key=lambda subjoint: subjoint.x1)
 
     
-    def subjoint_belongs_to_joint(self, new_subjoint: subjoint.SubJoint) -> bool:
+    def belongs_to_joint(self, new_subjoint: subjoint.SubJoint) -> bool:
         """Determines if a subjoint belongs to the horizontal joint. There are 
         three cases that occur:
 
@@ -63,13 +63,11 @@ class HorizontalJoint:
             return True
         
         # subjoint is directly right of current the rightmost subjoint
-        if abs(new_subjoint.x1 - self.subjoints[-1].x2) <= 100 \
-            and abs(new_subjoint.y1 - self.subjoints[-1].y2) <= 100:
+        if abs(new_subjoint.y1 - self.subjoints[-1].y2) <= 100:
             return True
         
         # subjoint is directly left of the current leftmost subjoint
-        if abs(new_subjoint.x2 - self.subjoints[0].x1) <= 100 \
-            and abs(new_subjoint.y2 - self.subjoints[0].x1) <= 100:
+        if abs(new_subjoint.y2 - self.subjoints[0].y1) <= 100:
             return True
         
         return False
@@ -82,7 +80,7 @@ class HorizontalJoint:
         Returns:
             int: maximum y value of the horizontal joint
         """
-        return max([subjoint.y2 for subjoint in self.subjoints], 
+        return max(max([subjoint.y2 for subjoint in self.subjoints]), 
                    (max([subjoint.y1 for subjoint in self.subjoints])))
     
 
@@ -93,10 +91,32 @@ class HorizontalJoint:
         Returns:
             int: minimum y value of the horizontal joint
         """
-        return min([subjoint.y2 for subjoint in self.subjoints], 
+        return min(min([subjoint.y2 for subjoint in self.subjoints]),
                    (min([subjoint.y1 for subjoint in self.subjoints])))
 
 
+    def get_max_x(self) -> int:
+        """Gets the maximum x value of the horizontal joint.
+
+        
+        Returns:
+            int: maximum x value of the horizontal joint
+        """
+        return max(max([subjoint.x2 for subjoint in self.subjoints]),
+                   (max([subjoint.x1 for subjoint in self.subjoints])))
+    
+
+    def get_min_x(self) -> int:
+        """Gets the minimum x value of the horizontal joint.
+
+        
+        Returns:
+            int: minimum x value of the horizontal joint
+        """
+        return min(min([subjoint.x2 for subjoint in self.subjoints]),
+                   (min([subjoint.x1 for subjoint in self.subjoints])))
+    
+    
     def get_bottom_img_id(self, base_id: int, img_size: int):
         """Gets the image id of the bottom of the horizontal joint.
 
@@ -109,7 +129,7 @@ class HorizontalJoint:
         Returns:
             int: image id of the bottom of the horizontal joint
         """
-        return base_id + self.get_min_y() // img_size
+        return base_id + int(self.get_min_y()) // img_size
     
 
     def get_top_img_id(self, base_id: int, img_size: int):
@@ -124,6 +144,11 @@ class HorizontalJoint:
         Returns:
             int: image id of the top of the horizontal joint
         """
-        return base_id + self.get_max_y() // img_size
+        return base_id + int(self.get_max_y()) // img_size
         
-        
+    
+    def __str__(self):
+        s = ''
+        for subjoint in self.subjoints:
+            s += str(subjoint) + '\n'
+        return s

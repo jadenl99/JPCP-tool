@@ -29,10 +29,10 @@ class TestJoints(unittest.TestCase):
         subjoint_right = SubJoint(3000, 3000, 6000, 6000)
         joint = HorizontalJoint()
 
-        if (joint.subjoint_belongs_to_joint(subjoint_left)):
+        if (joint.belongs_to_joint(subjoint_left)):
             joint.add_subjoint(subjoint_left)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_right)):
+        if (joint.belongs_to_joint(subjoint_right)):
             joint.add_subjoint(subjoint_right)
         
         self.assertEqual(subjoint_left, joint.subjoints[0])
@@ -44,10 +44,10 @@ class TestJoints(unittest.TestCase):
         subjoint_left = SubJoint(0, 0, 3000, 3000)
         joint = HorizontalJoint()
 
-        if (joint.subjoint_belongs_to_joint(subjoint_right)):
+        if (joint.belongs_to_joint(subjoint_right)):
             joint.add_subjoint(subjoint_right)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_left)):
+        if (joint.belongs_to_joint(subjoint_left)):
             joint.add_subjoint(subjoint_left)
         
         self.assertEqual(subjoint_left, joint.subjoints[0])
@@ -59,10 +59,10 @@ class TestJoints(unittest.TestCase):
         subjoint_right = SubJoint(3099, 3099, 5000, 3500)
         joint = HorizontalJoint()
 
-        if (joint.subjoint_belongs_to_joint(subjoint_left)):
+        if (joint.belongs_to_joint(subjoint_left)):
             joint.add_subjoint(subjoint_left)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_right)):
+        if (joint.belongs_to_joint(subjoint_right)):
             joint.add_subjoint(subjoint_right)
         
         self.assertEqual(subjoint_left, joint.subjoints[0])
@@ -74,10 +74,10 @@ class TestJoints(unittest.TestCase):
         subjoint_right = SubJoint(3099, 3099, 5000, 3500)
         joint = HorizontalJoint()
 
-        if (joint.subjoint_belongs_to_joint(subjoint_right)):
+        if (joint.belongs_to_joint(subjoint_right)):
             joint.add_subjoint(subjoint_right)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_left)):
+        if (joint.belongs_to_joint(subjoint_left)):
             joint.add_subjoint(subjoint_left)
         
         self.assertEqual(subjoint_left, joint.subjoints[0])
@@ -88,10 +88,10 @@ class TestJoints(unittest.TestCase):
         subjoint_right = SubJoint(3101, 3101, 5000, 5000)
         joint = HorizontalJoint()
 
-        if (joint.subjoint_belongs_to_joint(subjoint_left)):
+        if (joint.belongs_to_joint(subjoint_left)):
             joint.add_subjoint(subjoint_left)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_right)):
+        if (joint.belongs_to_joint(subjoint_right)):
             joint.add_subjoint(subjoint_right)
         
         self.assertEqual(subjoint_left, joint.subjoints[0])
@@ -105,13 +105,13 @@ class TestJoints(unittest.TestCase):
 
         joint = HorizontalJoint()
 
-        if (joint.subjoint_belongs_to_joint(subjoint_end)):
+        if (joint.belongs_to_joint(subjoint_end)):
             joint.add_subjoint(subjoint_end)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_middle)):
+        if (joint.belongs_to_joint(subjoint_middle)):
             joint.add_subjoint(subjoint_middle)
         
-        if (joint.subjoint_belongs_to_joint(subjoint_begin)):
+        if (joint.belongs_to_joint(subjoint_begin)):
             joint.add_subjoint(subjoint_begin)
 
         self.assertEqual(subjoint_begin, joint.subjoints[0])

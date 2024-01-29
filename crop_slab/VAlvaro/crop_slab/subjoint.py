@@ -39,3 +39,6 @@ class SubJoint:
             dist = round(dist, 2)
         
         self.dist = dist
+
+    def __str__(self):
+        return f"({self.x1}, {self.y1}), ({self.x2}, {self.y2})"
