@@ -1,4 +1,4 @@
-cdimport argparse
+import argparse
 import os
 from crop_slab.crop_slab_image import CropSlabs
 from crop_slab.continuous_range import ContinuousRange
@@ -6,7 +6,7 @@ from crop_slab.continuous_range import ContinuousRange
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Slab detection project for Georgia Tech Smart Cities Lab\n'
-                    'Fall 2021, Aditya Tapshalkar'
+                    'Fall 2021, Aditya Tapshalkar' 
     )
 
     parser.add_argument('-f',
