@@ -36,17 +36,9 @@ class HorizontalJoint:
 
     
     def belongs_to_joint(self, new_subjoint: subjoint.SubJoint) -> bool:
-        """Determines if a subjoint belongs to the horizontal joint. There are 
-        three cases that occur:
-
-        1. The subjoint to be added is directly right of the current rightmost
-        subjoint of the horizontal joint.
-
-        2. The subjoint to be added is directly left of the current leftmost
-        subjoint of the horizontal joint. 
-
-        3. The subjoint is nowhere near the other subjoints of the horiziontal
-        joint of interest. 
+        """Determines if a subjoint belongs to the horizontal joint. Checks if
+        new subjoint has a y1 or y2 value that is within 100 pixels of the range
+        of the horizontal joint's current subjoints.
 
 
         Args:
@@ -62,14 +54,19 @@ class HorizontalJoint:
         if not self.subjoints:
             return True
         
-        # subjoint is directly right of current the rightmost subjoint
-        if abs(new_subjoint.y1 - self.subjoints[-1].y2) <= 100:
-            return True
+        # # subjoint is directly right of current the rightmost subjoint
+        # if abs(new_subjoint.y1 - self.subjoints[-1].y2) <= 100:
+        #     return True
         
-        # subjoint is directly left of the current leftmost subjoint
-        if abs(new_subjoint.y2 - self.subjoints[0].y1) <= 100:
-            return True
-        
+        # # subjoint is directly left of the current leftmost subjoint
+        # if abs(new_subjoint.y2 - self.subjoints[0].y1) <= 100:
+        #     return True
+
+        y_max = self.get_max_y()
+        y_min = self.get_min_y()
+        if (y_min - 100 <= new_subjoint.y1 <= y_max + 100 
+            or y_min - 100 <= new_subjoint.y2 <= y_max + 100):
+            return True        
         return False
     
 
@@ -147,6 +144,17 @@ class HorizontalJoint:
         return base_id + int(self.get_max_y()) // img_size
         
     
+    def get_y_midpoint(self) -> int:
+        """Gets the y-value of the midpoint of the horizontal joint.
+
+        
+        Returns:
+            int: y-value of the midpoint of the horizontal joint
+        """
+        return (self.subjoints[-1].y2 - self.subjoints[0].y1) // 2
+    
+
+
     def __str__(self):
         s = ''
         for subjoint in self.subjoints:

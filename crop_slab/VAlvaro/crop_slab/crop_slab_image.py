@@ -135,10 +135,11 @@ class CropSlabs:
                         if len(joint_queue) >= 2:
                             self.slice_image(joint_queue[0], joint_queue[1], 
                                              writer)
-                            # with open(self.txt_path, 'a') as debug_file:
-                            #     debug_file.write(str(joint_queue[0]) + '\n')
-                            #     debug_file.write(str(joint_queue[1]) + '\n')
-                            #     debug_file.write('__________________________\n')
+                            with open(self.txt_path, 'a') as debug_file:
+                                debug_file.write(str(self.slab_num - 1) + '__________________________\n')
+                                debug_file.write(str(joint_queue[0]) + '\n')
+                                debug_file.write(str(joint_queue[1]) + '\n')
+                                debug_file.write('__________________________\n')
                             joint_queue.popleft()
                         # create new joint
                         curr_joint = 1
@@ -264,6 +265,11 @@ class CropSlabs:
         for x in range(width):
             # the y-cutoff is expressed relative to the cropped image
             y = (height) - (bottom_func.get_y(x + x_min) - y_min)
+            # account for edge calculations that may be slightly off
+            if y < 0:
+                y = 0
+            elif y >= height:
+                y = height - 1
             y = int(y)
             img[y:, x] = [0, 0, 0]
 
@@ -278,6 +284,11 @@ class CropSlabs:
         for x in range(width):
             # the y-cutoff is expressed relative to the cropped image
             y = (height) - (top_func.get_y(x + x_min) - y_min)
+            # account for edge calculations that may be slightly off
+            if y < 0:
+                y = 0
+            elif y >= height:
+                y = height - 1
             y = int(y)
             img[:y, x] = [0, 0, 0]
             
@@ -307,10 +318,10 @@ class CropSlabs:
         bottom_img_index = bottom_joint.get_bottom_img_id(0, self.im_size)
         top_img_index = top_joint.get_top_img_id(0, self.im_size)
         width = bottom_joint.right_bound - bottom_joint.left_bound
-        # measured from bottom left to top left
-        length = top_joint.subjoints[0].y1 - bottom_joint.subjoints[0].y1
-        # uses absolute location of the bottom left joint
-        y_offset = bottom_joint.subjoints[0].y1
+        # measured from midpoint to midpoint
+        length = top_joint.get_y_midpoint() - bottom_joint.get_y_midpoint()
+        # uses absolute location of the bottom joint's midpoint
+        y_offset = bottom_joint.get_y_midpoint()
         y_min = int(bottom_joint.get_min_y())
         y_max = int(top_joint.get_max_y())
  
