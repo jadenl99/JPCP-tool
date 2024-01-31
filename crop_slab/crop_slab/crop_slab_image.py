@@ -45,6 +45,7 @@ class CropSlabs:
 
         self.crop()
 
+
     def get_im_id(self, s):
 
         # From util file; retrieves image by ID
@@ -65,7 +66,6 @@ class CropSlabs:
 
 
     def filter_files(self, path, file_type) -> list:
-
         # Returns files of specified file type
         filtered = list(filter(lambda file: 
                                file.split(".")[-1] == file_type, 
@@ -74,7 +74,6 @@ class CropSlabs:
         return filtered
 
     def clean_folder(self):
-
         # Removing previous slab images and metadata; comment as necessary
         try:
             shutil.rmtree(self.slab_path)
@@ -83,7 +82,10 @@ class CropSlabs:
 
         os.mkdir(self.slab_path)
 
+
     def crop(self):
+        """Algorithm to crop slabs from the dataset. 
+        """
         self.clean_folder()  # Cleaning folders; comment as necessary
         with open(self.csv_path, 'w', newline='') as range_csv:
 
@@ -135,11 +137,11 @@ class CropSlabs:
                         if len(joint_queue) >= 2:
                             self.slice_image(joint_queue[0], joint_queue[1], 
                                              writer)
-                            with open(self.txt_path, 'a') as debug_file:
-                                debug_file.write(str(self.slab_num - 1) + '__________________________\n')
-                                debug_file.write(str(joint_queue[0]) + '\n')
-                                debug_file.write(str(joint_queue[1]) + '\n')
-                                debug_file.write('__________________________\n')
+                            # with open(self.txt_path, 'a') as debug_file:
+                            #     debug_file.write(str(self.slab_num - 1) + '__________________________\n')
+                            #     debug_file.write(str(joint_queue[0]) + '\n')
+                            #     debug_file.write(str(joint_queue[1]) + '\n')
+                            #     debug_file.write('__________________________\n')
                             joint_queue.popleft()
                         # create new joint
                         curr_joint = 1
