@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--size',
                         metavar='<image size>',
                         type=int,
-                        default=5000,
+                        default=1250,
                         help='Size of images')
 
     parser.add_argument('--unit',

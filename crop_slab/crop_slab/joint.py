@@ -120,7 +120,8 @@ class HorizontalJoint:
         
         Args:
             base_id (int): image id of the first image
-            img_size (int): size (length from top to bottom) of the input images
+            img_size (int): size (length from top to bottom in mm) 
+            of the input images
 
             
         Returns:
@@ -151,7 +152,7 @@ class HorizontalJoint:
         Returns:
             int: y-value of the midpoint of the horizontal joint
         """
-        return (self.subjoints[-1].y2 - self.subjoints[0].y1) // 2
+        return (self.subjoints[-1].y2 + self.subjoints[0].y1) // 2
     
 
 
