@@ -36,8 +36,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--mode',
                         metavar='<cropping mode>',
+                        choices=['range', 'intensity'],
+                        nargs='*',
                         type=str,
-                        default='range',
+                        default=['range'],
                         help='Image layer to process ("range" | "intensity")')
 
     func, dir, size, unit, mode = list(vars(parser.parse_args()).values())
@@ -60,8 +62,8 @@ if __name__ == '__main__':
     if unit not in {"px", "mm"}:
         raise ValueError("Please enter a valid unit.")
 
-    if mode not in {"range", "intensity"}:
-        raise ValueError("Please enter a valid image layer.")
+    if len(mode) > 2:
+        raise ValueError("Mode argument can only have two or less values")
 
     if func == "crop-slabs":
         cs = CropSlabs(dir, size, unit, mode)

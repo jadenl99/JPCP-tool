@@ -17,33 +17,45 @@ from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
 import numpy as np
 class CropSlabs:
-    def __init__(self, data_path, im_size, im_unit="px", mode='range'):
+    def __init__(self, data_path, im_size, im_unit="px", mode=['range']):
         # filepath of the dataset
         self.data_path = data_path
         self.im_size = im_size
         self.im_unit = im_unit
         self.im_length_mm = 5000
 
-        if mode == 'range':
-            self.range_path = os.path.join(self.data_path, "Range")
-        elif mode == 'intensity':
-            self.range_path = os.path.join(self.data_path, "Intensity")
+        
 
         self.xml_path = os.path.join(self.data_path, "XML")
 
-        self.range_list = self.filter_files(self.range_path, "jpg")
         self.xml_list = self.filter_files(self.xml_path, "xml")
 
         self.slab_path = os.path.join(self.data_path, "Slabs")
+        if not os.path.exists(self.slab_path):
+            os.mkdir(self.slab_path)
+        
         self.csv_path = os.path.join(self.data_path, "slabs.csv")  # Slab file
         self.txt_path = os.path.join(self.data_path, "debug.txt")  # Debug file
+        self.input_im_path = None
+        self.output_im_path = None
 
         self.slab_len = None
         self.slab_num = 1
         self.first_im = 0
-    
+        self.written = False
 
-        self.crop()
+
+        self.clean_folder()  # Cleaning folders; comment as necessary
+        
+        for single_mode in mode:
+            self.slab_num = 1
+            self.input_im_path = os.path.join(self.data_path, single_mode.capitalize())
+            self.input_im_files = self.filter_files(self.input_im_path, "jpg")
+            self.output_im_path = os.path.join(self.slab_path, 'output_' + single_mode)
+            os.mkdir(self.output_im_path)
+            self.crop()
+            
+        
 
 
     def get_im_id(self, s):
@@ -87,19 +99,19 @@ class CropSlabs:
         """Algorithm to crop slabs from the dataset. 
         """
         NUM_JOINTS_PER_IMAGE = 2    
-        self.clean_folder()  # Cleaning folders; comment as necessary
+        
         with open(self.csv_path, 'w', newline='') as range_csv:
 
-            fields = ["slab_index", "length", "width", 
-                      "start_im", "end_im", "y_offset",
-                      "y_min", "y_max"]
+            fields = ["slab_index", "length (mm)", "width (mm)", 
+                      "start_im", "end_im", "y_offset (mm)",
+                      "y_min (mm)", "y_max (mm)"]
             writer = csv.DictWriter(range_csv, fieldnames=fields)
             writer.writeheader()
 
             joint_queue = deque()
             curr_joint = None
             # Iterate through all manual_xml files
-            for i, xml_file in enumerate((self.xml_list)):
+            for i, xml_file in enumerate(tqdm(self.xml_list)):
                 xml_data = open(os.path.join(self.xml_path, xml_file))
                 xml_soup = BeautifulSoup(xml_data, "lxml")
 
@@ -160,7 +172,7 @@ class CropSlabs:
         # end write
                     
                     
-    def generate_subjoints_list(self, subjoints_data, i) -> list[SubJoint]:
+    def generate_subjoints_list(self, subjoints_data, i: int) -> list[SubJoint]:
         """Given a piece of subjoint data extracted from BeautifulSoup, creates
         a list of subjoint objects
 
@@ -291,9 +303,10 @@ class CropSlabs:
 
         # save image to files
         cv2.imwrite(
-            os.path.join(self.slab_path, str(self.slab_num) + '.jpg'), img
+            os.path.join(self.output_im_path, str(self.slab_num) + '.jpg'), img
             )    
 
+        
         self.write_slab_metadata(writer, bottom_joint, top_joint)
         self.slab_num += 1
 
@@ -309,10 +322,10 @@ class CropSlabs:
             np.ndarray: the joined image
         """
         img = cv2.imread(
-            os.path.join(self.range_path, self.range_list[bottom_img_index]))
+            os.path.join(self.input_im_path, self.input_im_files[bottom_img_index]))
         for i in range(bottom_img_index + 1, top_img_index + 1):
             temp_img = cv2.imread(
-                os.path.join(self.range_path, self.range_list[i])
+                os.path.join(self.input_im_path, self.input_im_files[i])
                 )
             img = cv2.vconcat([temp_img, img])
         return img
@@ -341,14 +354,14 @@ class CropSlabs:
  
         writer.writerow({
                         "slab_index": self.slab_num,
-                        "length": length,
-                        "width": width,
+                        "length (mm)": length,
+                        "width (mm)": width,
                         "start_im": self.xml_list[bottom_img_index],
                         "end_im": self.xml_list[top_img_index],
                         # y_offset calculated always using bottom left corner
-                        "y_offset": y_offset, 
-                        "y_min": y_min,
-                        "y_max": y_max  
+                        "y_offset (mm)": y_offset, 
+                        "y_min (mm)": y_min,
+                        "y_max (mm)": y_max  
                         })
         
 

@@ -1,7 +1,6 @@
 # replaced-slab-detection
-Aditya Tapshalkar
-Fall 2021 - Special Problems (CS 8903)
-Georgia Institute of Technology 
+Originally created by Aditya Tapshalkar
+Improvements by Jaden Lim
 
 ___
 1.) University of California Pavement Research Center (UCPRC) data processing and You Only Look Once (YOLOv5) model generation
@@ -33,3 +32,26 @@ Directions for running code:
   * Manually create ground truth CSV files classifying each extracted slab image as unreplaced (0)/replaced (1)/faulty (-1)
   * Run `slab-analysis.ipynb` to generate CSV file from slab length and histogram data
   * Run `slab-classification.ipynb` to create and train LinearSVC model, and determine best hypertuning parameters and metrics analysis with Scikit-learn
+* To crop both range and intensity images:
+  * To install dependencies, run `pip install -r requirements.txt`.
+  * Run `python main.py -f crop-slabs -d {path-to-data} --mode range intensity`
+  * Ensure the range and intensity images are included in the `Range` and `Intensity` folders, respectively. Also ensure the manual XML data to read from is included in the `XML` folder.
+
+# Changelog
+
+## [2.0.1] - 2024-02-04
+* Additions
+  * Add support to simutaneously crop range and intensity images
+* Fixes
+  * y-offset and length on slabs.csv were calculated incorrectly for each slab. This has been fixed.
+* Removed
+  * Input images are not scaled up anymore to correspond to the slab's dimensions in mm before cropping. Cropping is now done on the original input image's dimensions to improve runtime of the program and to save space for the output files.
+
+## [2.0.0] - 2024-01-31
+* Additions
+  * The lower and upper corners that do not belong to the slab of interest are blackened out.
+  * y_min and y_max information displays on the slabs.csv file.
+* Fixes
+  * Previously, the slabs were cropped at the midpoint of both the bottom and top joints, resulting in the loss of information on the corners of slabs. The slab cropper now crops at the y_min and y_max of the bottom and top slabs, respectively.
+  * Output images were previously saved in png format, which took up too much space. Output images are now saved to jpg format to match the format of input images.
+
