@@ -178,7 +178,7 @@ class SlabRegistration:
                     cy_dic[n]["Matching Slab ID"] = self.by_dic[by_slabindex]["Slab ID"]
                     cy_dic[n]["Matching Slab Index"] = by_slabindex
                     #Stats
-                    cy_dic[n]["Within Slabs"] = str(self.by_dic[by_slabindex]["Slab ID"]) + ", " + str(self.by_dic[by_slabindex]["Slab ID"] + 1)
+                    cy_dic[n]["Within Slabs"] = str(self.by_dic[by_slabindex]["Slab ID"]) + ", " + str(self.by_dic[by_slabindex]["Slab ID"] + 1)    
                     #Update parameters
                     carryover = cy_dic[n]["Length"] - (self.by_dic[by_slabindex]["Length"] - length)
                     length = length + cy_dic[n]["Length"] - carryover
