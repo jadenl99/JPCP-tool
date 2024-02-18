@@ -39,7 +39,9 @@ Directions for running code:
   * Ensure the range and intensity images are included in the `Range` and `Intensity` folders, respectively. Also ensure the manual XML data to read from is included in the `XML` folder.
 
 # Changelog
-
+## [2.0.2] - 2024-02-17
+* Fixes
+  * Zero length subjoints would halt the program. Now subjoints that are too small in length are ignored.
 ## [2.0.1] - 2024-02-04
 * Additions
   * Add support to simutaneously crop range and intensity images

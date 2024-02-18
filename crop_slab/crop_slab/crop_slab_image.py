@@ -190,10 +190,11 @@ class CropSlabs:
         subjoints = []
         for subjoint_data in subjoints_data:
             subjoint = self.create_subjoint_obj(subjoint_data, i)
-            subjoints.append(subjoint)
+            if subjoint is not None and subjoint.dist > 200:
+                subjoints.append(subjoint)
         subjoints.sort(key=lambda subjoint: subjoint.y1)
         return subjoints               
-                    
+    
 
     def create_subjoint_obj(self, subjoint_data, i) -> SubJoint:
         """Given a piece of subjoint data extracted from BeautifulSoup, creates
@@ -206,7 +207,8 @@ class CropSlabs:
             currently in
 
         Returns:
-            SubJoint: the SubJoint object created from the subjoint data
+            SubJoint: the SubJoint object created from the subjoint data or
+            None if subjoint data is invalid (i.e. a point instead of a line)
         """
         
         x1 = float(subjoint_data.find('x1').get_text())
@@ -216,7 +218,14 @@ class CropSlabs:
         y2 = float(subjoint_data.find('y2').get_text()) + \
             self.im_length_mm * i       
         
-        return SubJoint(int(x1), int(y1), int(x2), int(y2))
+            
+        
+        try:
+            subjoint = SubJoint(int(x1), int(y1), int(x2), int(y2))
+        except ValueError:
+            return None
+        
+        return subjoint
     
 
     def produce_image(self, 
@@ -313,7 +322,6 @@ class CropSlabs:
     
     def join_images(self, bottom_img_index, top_img_index):
         """Joins images together into one image
-
         Args:
             bottom_img_index (int): the index of the bottom image
             top_img_index (int): the index of the top image
