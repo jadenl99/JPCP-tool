@@ -3,18 +3,21 @@ import os
 import shutil
 import zipfile
 import xml.etree.ElementTree as ET
+from tqdm import tqdm
 class XML_CVAT_Parser:
     def __init__(self, data_dir, px_height, px_width, 
                  mm_height, mm_width, mode):
         self.data_dir = data_dir  
         self.xml_dir = os.path.join(data_dir, "XML")
         self.xml_files = os.listdir(self.xml_dir)
+        self.img_dir = os.path.join(data_dir, mode.capitalize())
         self.output_dir = os.path.join(data_dir, "CVAT_data")
         self.id = 0
         self.px_height = px_height
         self.scale_factor_y = float(px_height) / mm_height
         self.scale_factor_x = float(px_width) / mm_width
         self.mode = mode
+        self.task_size = 5000
         self.clean_folder(self.output_dir)
 
         self.parse()
@@ -41,53 +44,82 @@ class XML_CVAT_Parser:
         # Top level element#####################################################
         annotations = ET.Element('annotations')
         ########################################################################
-        for xml_file in self.xml_files:
+        task_dir = ''
+        output_img_dir = ''
+        for xml_file in tqdm(self.xml_files):
+            if self.id % self.task_size == 0:
+                task_num = self.id // self.task_size
+                task_dir = os.path.join(self.output_dir, f'task_{task_num}')
+                os.mkdir(task_dir)
+                output_img_dir = os.path.join(task_dir, 'images')
+                os.mkdir(output_img_dir)
+
+            img_name = self.image_name(xml_file)
+            xml = None
             with open(os.path.join(self.xml_dir, xml_file), "r") as f:
-                # Image element#################################################
-                image = ET.SubElement(annotations, 'image', 
-                                      id=str(self.id), 
-                                      name=self.image_name(xml_file))
-                ################################################################
                 xml = f.read()
-                soup = BeautifulSoup(xml, 'xml')
-                subjoints_data = soup.find_all('Joint')
-                for subjoint in subjoints_data:
-                    x1 = float(subjoint.find('X1').get_text())
-                    y1 = float(subjoint.find('Y1').get_text())
-                    x2 = float(subjoint.find('X2').get_text())
-                    y2 = float(subjoint.find('Y2').get_text())
-                    x1 = self.convert_val_x(x1)
-                    x2 = self.convert_val_x(x2)
-                    y1 = self.convert_val_y(y1)
-                    y2 = self.convert_val_y(y2)
-                    # Subjoint polyline element#################################
-                    subjoint = ET.SubElement(image, 'polyline', 
-                                            label='subjoint',
+            # Image element#####################################################
+            image = ET.SubElement(annotations, 'image', 
+                                    id=str(self.id), 
+                                    name=img_name)
+            with open(os.path.join(self.img_dir, img_name), 'rb') as f, \
+                open(os.path.join(output_img_dir, img_name), 'wb') as f2:
+                shutil.copyfileobj(f, f2)
+            ####################################################################               
+            soup = BeautifulSoup(xml, 'xml')
+            joint_list = soup.find('JointList')
+            subjoints_data = joint_list.find_all('Joint')
+            for subjoint in subjoints_data:
+                endpoints = self.extract_endpoints(subjoint)
+                endpoints = ';'.join([str(i) for i in endpoints])
+                # Subjoint polyline element#####################################
+                subjoint = ET.SubElement(image, 'polyline', 
+                                        label='subjoint',
+                                        occluded='0',
+                                        points=endpoints,
+                                        z_order='0',
+                                        source='Faulting info here')   
+                ################################################################
+            
+            lanemarkers_data = soup.find_all('LaneMark')
+            for lanemarker in lanemarkers_data:
+                x = float(lanemarker.find('Position').get_text())
+                x = self.convert_val_x(x)
+                # Lanemarker point element######################################
+                lanemarker = ET.SubElement(image, 'polyline', 
+                                            label='lane_marker',
                                             occluded='0',
-                                            points=f'{x1},{y1};{x2},{y2}',
+                                            points=f'{x},{self.px_height};{x},0',
                                             z_order='0')
-                    ############################################################
-                
-                lanemarkers_data = soup.find_all('LaneMark')
-                for lanemarker in lanemarkers_data:
-                    x = float(lanemarker.find('Position').get_text())
-                    x = self.convert_val_x(x)
-                    # Lanemarker point element##################################
-                    lanemarker = ET.SubElement(image, 'polyline', 
-                                               label='lane_marker',
-                                               occluded='0',
-                                               points=f'{x},{self.px_height};{x},0',
-                                               z_order='0')
-                    ############################################################
+                ################################################################
             self.id += 1
         tree = ET.ElementTree(annotations)
         ET.indent(tree, space='\t', level=0)
-        tree.write(os.path.join(self.output_dir, 'annotations.xml'),
+        tree.write(os.path.join(task_dir, 'annotations.xml'),
                    encoding='utf-8', 
-                   xml_declaration=True)   
+                   xml_declaration=True) 
+        shutil.make_archive(task_dir, 'zip', task_dir)
+        shutil.rmtree(task_dir)
             
-                
 
+    def extract_endpoints(self, subjoint):
+        """Extracts the endpoints of the subjoint
+
+        Args:
+            subjoint (bs4.element.Tag): subjoint element
+
+        Returns:
+            tuple: (x1, y1, x2, y2)
+        """
+        x1 = float(subjoint.find('X1').get_text())
+        y1 = float(subjoint.find('Y1').get_text())
+        x2 = float(subjoint.find('X2').get_text())
+        y2 = float(subjoint.find('Y2').get_text())
+        x1 = self.convert_val_x(x1)
+        x2 = self.convert_val_x(x2)
+        y1 = self.convert_val_y(y1)
+        y2 = self.convert_val_y(y2)
+        return (x1, y1, x2, y2)
 
 
     def image_name(self, xml_file):
@@ -127,7 +159,7 @@ class XML_CVAT_Parser:
         if start_index == -1:
             return None
 
-        return int(s[start_index:end_index][::-1])
+        return (s[start_index:end_index][::-1])
     
 
     def convert_val_y(self, val):
@@ -173,5 +205,3 @@ class XML_CVAT_Parser:
     
     
                 
-
-    
