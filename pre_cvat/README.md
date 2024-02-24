@@ -4,12 +4,18 @@ Georgia Institute of Technology
 Smart City Infrastructure  
 
 ## Running the Program
+On the root directory of this application, run in the command line:  
+`python main.py -f <path_to_data>`  
+Ensure the folder with all the data contains the XML folder, which should contain all the XML files from the LCMS output, as well as the range/intensity folders. The file structure of the data should look something like this after running LCMS roadinspect. 
 ```
-├───2014  
+├───your_data_folder  
 |  ├───Intensity  
 |  ├───Range  
 |  └───XML  
 ```
+To optionally partition the dataset into multiple tasks to distribute to others, run the command with the additional argument `--tasksize <number>`.  
+
+After running the program, the folder `CVAT_data` should be created, and inside contains one or more zip files that can be fed into CVAT.
 
 
 # Changelog

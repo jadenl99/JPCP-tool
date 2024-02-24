@@ -62,6 +62,9 @@ if __name__ == '__main__':
     else:
         raise ValueError("Data source directory could not be found.")
     
+    if tasksize <= 0:
+        raise ValueError("Please enter a valid task size.")
+    
     if pxh <= 0 or mmh <= 0:
         raise ValueError("Please enter a valid image size.")
     
