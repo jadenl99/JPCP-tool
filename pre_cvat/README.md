@@ -4,10 +4,12 @@ Georgia Institute of Technology
 Smart City Infrastructure  
 
 ## Running the Program
- ├───2014  
-    ├───Intensity  
-    ├───Range  
-    └───XML  
+'''
+├───2014  
+|  ├───Intensity  
+|  ├───Range  
+|  └───XML  
+'''
 
 
 # Changelog
