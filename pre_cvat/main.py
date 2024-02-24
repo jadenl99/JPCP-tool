@@ -43,18 +43,29 @@ if __name__ == '__main__':
                         default='range',
                         help='Image layer to annotate ("range" | "intensity")')
     
-    dir, pxh, pxw, mmh, mmw, type = list(vars(parser.parse_args()).values())
+    parser.add_argument('--tasksize',
+                        metavar='<number of images per task>',
+                        type=int,
+                        default=100000000000,
+                        help='Number of images per task')
+    
+    dir, pxh, pxw, mmh, mmw, type, tasksize \
+        = list(vars(parser.parse_args()).values())
 
     if os.path.isdir(dir):
         if not os.path.isdir(os.path.join(dir, type))\
                 or not os.path.isdir(os.path.join(dir, "XML")):
             raise ValueError(
-                "'Image' or 'XML' subdirectory could not be found in provided directory."
+                "'Image' or 'XML' subdirectory could " 
+                + "not be found in provided directory."
             )
     else:
         raise ValueError("Data source directory could not be found.")
     
+    if tasksize <= 0:
+        raise ValueError("Please enter a valid task size.")
+    
     if pxh <= 0 or mmh <= 0:
         raise ValueError("Please enter a valid image size.")
     
-    XML_CVAT_Parser(dir, pxh, pxw, mmh, mmw, type)
+    XML_CVAT_Parser(dir, pxh, pxw, mmh, mmw, type, tasksize)
