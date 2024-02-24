@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from tqdm import tqdm
 class XML_CVAT_Parser:
     def __init__(self, data_dir, px_height, px_width, 
-                 mm_height, mm_width, mode):
+                 mm_height, mm_width, mode, task_size):
         self.data_dir = data_dir  
         self.xml_dir = os.path.join(data_dir, "XML")
         self.xml_files = os.listdir(self.xml_dir)
@@ -17,7 +17,7 @@ class XML_CVAT_Parser:
         self.scale_factor_y = float(px_height) / mm_height
         self.scale_factor_x = float(px_width) / mm_width
         self.mode = mode
-        self.task_size = 5000
+        self.task_size = task_size
         self.clean_folder(self.output_dir)
 
         self.parse()
@@ -41,13 +41,17 @@ class XML_CVAT_Parser:
         """Looks through the XML files produced by the crack digitizer and
         converts the data to a format that can be read by CVAT.
         """
-        # Top level element#####################################################
-        annotations = ET.Element('annotations')
-        ########################################################################
+        annotations = None
         task_dir = ''
         output_img_dir = ''
         for xml_file in tqdm(self.xml_files):
+            if self.id != 0 and self.id % self.task_size == 0:
+                self.create_task_zip(annotations, task_dir)
+    
             if self.id % self.task_size == 0:
+                # Top level element#############################################
+                annotations = ET.Element('annotations')
+                ################################################################
                 task_num = self.id // self.task_size
                 task_dir = os.path.join(self.output_dir, f'task_{task_num}')
                 os.mkdir(task_dir)
@@ -93,6 +97,22 @@ class XML_CVAT_Parser:
                                             z_order='0')
                 ################################################################
             self.id += 1
+
+        self.create_task_zip(annotations, task_dir)
+
+
+    
+        
+            
+
+    def create_task_zip(self, annotations: ET.Element, task_dir: str):
+        """Creates a zip file of the task directory
+
+        Args:
+            annotations (ET.element): annotations top level element of the XML
+            file
+            task_dir (str): path to the task directory
+        """
         tree = ET.ElementTree(annotations)
         ET.indent(tree, space='\t', level=0)
         tree.write(os.path.join(task_dir, 'annotations.xml'),
@@ -100,7 +120,7 @@ class XML_CVAT_Parser:
                    xml_declaration=True) 
         shutil.make_archive(task_dir, 'zip', task_dir)
         shutil.rmtree(task_dir)
-            
+       
 
     def extract_endpoints(self, subjoint):
         """Extracts the endpoints of the subjoint
