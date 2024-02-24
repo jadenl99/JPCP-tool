@@ -1,13 +1,13 @@
 # LCMS XML to CVAT Annotations for Manual Joint Editing
-Jaden Lim
-Georgia Institute of Technology
-Smart City Infrastructure
+Jaden Lim  
+Georgia Institute of Technology  
+Smart City Infrastructure  
 
 ## Running the Program
- ├───2014
-    ├───Intensity
-    ├───Range
-    └───XML
+ ├───2014  
+    ├───Intensity  
+    ├───Range  
+    └───XML  
 
 
 # Changelog
