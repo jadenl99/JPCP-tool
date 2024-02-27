@@ -43,8 +43,9 @@ Directions for running code:
 │   │   └───annotations.xml
 │   ├───Intensity
 │   ├───Range
+|   ├───XML
 ```
-  * Run `python main.py -f crop-slabs -d {path-to-data} --mode range intensity`
+   * Run `python main.py -f crop-slabs -d {path-to-data} --mode range intensity`
 * To crop both range and intensity images using ManualXML:
   * Run the same command, adding the `-o` flag. Ensure that you have a folder named `XML` inside the data folder that contains all the ManualXML data.
 
