@@ -1,7 +1,7 @@
 import argparse
 import os
+from crop_slab.crop_slab_cvat import CropSlabsCVAT
 from crop_slab.crop_slab_image import CropSlabs
-from crop_slab.continuous_range import ContinuousRange
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -41,8 +41,13 @@ if __name__ == '__main__':
                         type=str,
                         default=['range'],
                         help='Image layer to process ("range" | "intensity")')
+    
+    parser.add_argument('-o',
+                        action='store_true', 
+                        help='Whether to use the old version or not')
+    
 
-    func, dir, size, unit, mode = list(vars(parser.parse_args()).values())
+    func, dir, size, unit, mode, o = list(vars(parser.parse_args()).values())
 
     if func not in {"crop-slabs", "detect-joints"}:
         raise ValueError("Please enter a valid function name.")
@@ -65,5 +70,8 @@ if __name__ == '__main__':
     if len(mode) > 2:
         raise ValueError("Mode argument can only have two or less values")
 
-    if func == "crop-slabs":
+    if func == "crop-slabs" and o:
         cs = CropSlabs(dir, size, unit, mode)
+        print("Old version used")
+    else:
+        cs = CropSlabsCVAT(dir, size, unit, mode)

@@ -15,7 +15,7 @@ from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
 import numpy as np
-class CropSlabs:
+class CropSlabsCVAT:
     def __init__(self, data_path, im_size, im_unit="px", mode=['range']):
         # filepath of the dataset
         self.data_path = data_path
@@ -25,9 +25,9 @@ class CropSlabs:
 
         
 
-        self.xml_path = os.path.join(self.data_path, "XML")
-
-        self.xml_list = self.filter_files(self.xml_path, "xml")
+        self.annotation_file = os.path.join(self.data_path, 'CVAT_output/annotations.xml')
+        if not os.path.exists(self.annotation_file):
+            raise ValueError("Annotations file could not be found.")
 
         self.slab_path = os.path.join(self.data_path, "Slabs")
         if not os.path.exists(self.slab_path):
@@ -38,10 +38,10 @@ class CropSlabs:
         self.input_im_path = None
         self.output_im_path = None
 
-        self.slab_len = None
+    
         self.slab_num = 1
         self.first_im = 0
-        self.written = False
+ 
 
 
         self.clean_folder()  # Cleaning folders; comment as necessary
@@ -110,37 +110,19 @@ class CropSlabs:
             joint_queue = deque()
             curr_joint = None
             # Iterate through all manual_xml files
-            for i, xml_file in enumerate(tqdm(self.xml_list)):
-                xml_data = open(os.path.join(self.xml_path, xml_file))
-                xml_soup = BeautifulSoup(xml_data, "lxml")
+            xml_data = open(self.annotation_file)
+            xml_soup = BeautifulSoup(xml_data, "lxml")
+            images = xml_soup.find_all('image')
+            for i, image in enumerate(tqdm(images)):
+                subjoints_data = image.find_all('polyline')
+                subjoints_data = [subjoint for subjoint in subjoints_data
+                             if subjoint['label'] == 'subjoint']
 
-                # Fetch all horizontal joint data in the xml file
-                v_joints_data = []
-                left_joint = 0
-                right_joint = 3500
-                try:
-                    v_joints_data = xml_soup.findAll('lanemark')
-                except:
-                    pass
-                
-                try:
-                    left_joint = float(
-                        v_joints_data[0].find('position').get_text())
-                except:
-                    pass
-
-                try:
-                    right_joint = float(
-                        v_joints_data[1].find('position').get_text())
-                except:
-                    pass
+               
                 
                 if curr_joint is None:
-                    # change if cutoff slab is not necessary to include
-                    curr_joint = HorizontalJoint([SubJoint(0, 0, 3600, 0)],
-                        left_bound=left_joint, right_bound=right_joint)
+                    curr_joint = HorizontalJoint([SubJoint(0, 0, 3600, 0)])
                 # Fetch all joint segments data in the xml file
-                subjoints_data = xml_soup.findAll('joint')
                 subjoints = self.generate_subjoints_list(subjoints_data, i)
                 for subjoint in subjoints:
                     if not curr_joint.belongs_to_joint(subjoint):
@@ -156,8 +138,7 @@ class CropSlabs:
                             #     debug_file.write('__________________________\n')
                             joint_queue.popleft()
                         # create new joint
-                        curr_joint = HorizontalJoint(
-                            [], left_joint, right_joint)
+                        curr_joint = HorizontalJoint([])
                         
                     curr_joint.add_subjoint(subjoint)
 
@@ -165,7 +146,7 @@ class CropSlabs:
                 self.produce_image(joint_queue[0], curr_joint, writer)
 
             # delete if cutoff slab is not necessary to include
-            top_y = len(self.xml_list) * self.im_length_mm - 1
+            top_y = len(self.input_im_files) * self.im_length_mm - 1
             top_joint = HorizontalJoint([SubJoint(0, top_y, 3600, top_y)])   
             self.produce_image(curr_joint, top_joint, writer)
         # end write
@@ -210,12 +191,16 @@ class CropSlabs:
             None if subjoint data is invalid (i.e. a point instead of a line)
         """
         
-        x1 = float(subjoint_data.find('x1').get_text())
-        y1 = float(subjoint_data.find('y1').get_text()) + \
-            self.im_length_mm * i # for absolute position
-        x2 = float(subjoint_data.find('x2').get_text())
-        y2 = float(subjoint_data.find('y2').get_text()) + \
-            self.im_length_mm * i       
+        points = subjoint_data['points']     
+        points = points.replace(',', ';')
+        points = points.split(';')
+        scale_factor = self.im_length_mm / self.im_size
+        x1 = int(float(points[0]) * scale_factor)
+        y1 = self.im_length_mm - int(float(points[1]) * scale_factor) + i * self.im_length_mm
+        x2 = int(float(points[2]) * scale_factor)
+        y2 = self.im_length_mm - int(float(points[3]) * scale_factor) + i * self.im_length_mm
+
+
         
             
         
@@ -248,8 +233,8 @@ class CropSlabs:
         scale_factor = self.im_size / self.im_length_mm
         y_min = int(bottom_joint.get_min_y() - y_offset)
         y_max = int(top_joint.get_max_y() - y_offset)
-        x_min = int(bottom_joint.left_bound)
-        x_max = int(bottom_joint.right_bound)
+        x_min = int(bottom_joint.get_min_x())
+        x_max = int(bottom_joint.get_max_x())
         
         img = self.join_images(bottom_img_index, top_img_index)
         
@@ -363,8 +348,8 @@ class CropSlabs:
                         "slab_index": self.slab_num,
                         "length (mm)": length,
                         "width (mm)": width,
-                        "start_im": self.xml_list[bottom_img_index],
-                        "end_im": self.xml_list[top_img_index],
+                        "start_im": self.input_im_files[bottom_img_index],
+                        "end_im": self.input_im_files[top_img_index],
                         # y_offset calculated always using bottom left corner
                         "y_offset (mm)": y_offset, 
                         "y_min (mm)": y_min,
@@ -373,4 +358,4 @@ class CropSlabs:
         
 
 if __name__ == '__main__':
-    CropSlabs('../data/MP18-17')
+    CropSlabsCVAT('../data/MP18-17')
