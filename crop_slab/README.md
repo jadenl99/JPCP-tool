@@ -33,12 +33,25 @@ Directions for running code:
   * Manually create ground truth CSV files classifying each extracted slab image as unreplaced (0)/replaced (1)/faulty (-1)
   * Run `slab-analysis.ipynb` to generate CSV file from slab length and histogram data
   * Run `slab-classification.ipynb` to create and train LinearSVC model, and determine best hypertuning parameters and metrics analysis with Scikit-learn
-* To crop both range and intensity images:
+* To crop both range and intensity images using CVAT output:
   * To install dependencies, run `pip install -r requirements.txt`.
+  * Your file system should look something like this after the annotations have been done in CVAT. Note that the final annotations file must be placed in a folder called `CVAT_output`.
+```
+├───<data_folder>
+│   ├───CVAT_data
+│   ├───CVAT_output
+│   │   └───annotations.xml
+│   ├───Intensity
+│   ├───Range
+```
   * Run `python main.py -f crop-slabs -d {path-to-data} --mode range intensity`
-  * Ensure the range and intensity images are included in the `Range` and `Intensity` folders, respectively. Also ensure the manual XML data to read from is included in the `XML` folder.
+* To crop both range and intensity images using ManualXML:
+  * Run the same command, adding the `-o` flag. Ensure that you have a folder named `XML` inside the data folder that contains all the ManualXML data.
 
 # Changelog
+## [2.1.0] - 2024-02-27
+* Additions
+  * Can now support modified annotations from CVAT. Data extraction from ManualXML files might be sunset soon once the new pipeline is working.
 ## [2.0.2] - 2024-02-17
 * Fixes
   * Zero length subjoints would halt the program. Now subjoints that are too small in length are ignored.
