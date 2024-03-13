@@ -13,9 +13,9 @@ Ensure the folder with all the data contains the XML folder, which should contai
 |  ├───Range  
 |  └───XML  
 ```
-To optionally partition the dataset into multiple tasks to distribute to others, run the command with the additional argument `--tasksize <number>`.  
+To optionally partition the dataset into multiple tasks to distribute to others, run the command with the additional argument `--tasksize <number>` to specify how many images each task should contain.
 
-After running the program, the folder `CVAT_data` should be created, and inside contains one or more zip files that can be fed into CVAT.
+After running the program, the folder `CVAT_data` should be created, and inside contains one or more zip files that can be fed into CVAT. Refer to the slab boundary annotation guideline on further instructions.
 
 
 # Changelog
