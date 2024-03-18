@@ -14,18 +14,21 @@ from collections import deque
 from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
+from crop_slab.slab_writer import SlabWriter
 import numpy as np
 class CropSlabs:
-    def __init__(self, data_path, im_size, im_unit="px", mode=['range']):
+    def __init__(self, data_path, im_size, im_unit, mode, 
+                 begin_MM, end_MM, year, interstate):
         # filepath of the dataset
         self.data_path = data_path
         self.im_size = im_size
         self.im_unit = im_unit
         self.im_length_mm = 5000
 
-        
+        self.db_name = f'{interstate}_MM{begin_MM}_to_MM{end_MM}'
+        self.slab_writer = SlabWriter(self.db_name, year)
 
-        self.xml_path = os.path.join(self.data_path, "XML")
+        self.xml_path = os.path.join(self.data_path, "ManualXML")
 
         self.xml_list = self.filter_files(self.xml_path, "xml")
 
@@ -371,6 +374,11 @@ class CropSlabs:
                         "y_max (mm)": y_max  
                         })
         
+        start_im = self.get_im_id(self.xml_list[bottom_img_index])  
+        end_im = self.get_im_id(self.xml_list[top_img_index])
+        self.slab_writer.write_slab_entry(self.slab_num, length, width, 
+                                          start_im, end_im, y_offset, 
+                                          y_min, y_max)
 
 if __name__ == '__main__':
     CropSlabs('../data/MP18-17')

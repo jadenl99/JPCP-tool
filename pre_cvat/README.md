@@ -5,7 +5,9 @@ Smart City Infrastructure
 
 ## Running the Program
 On the root directory of this application, run in the command line:  
-`python main.py -d <path_to_data>`  
+`python main.py -d <path_to_data> -i <interstate> -b <begining MM> -e <ending MM> -y <year>` 
+An example command line call for the I-16 WB segment for MM 22-12 is: 
+`python main.py -i I16WB -b 22 -e 12 -y 2014 -d data/2014`.
 Ensure the folder with all the data contains the XML folder, which should contain all the XML files from the LCMS output, as well as the range/intensity folders. The file structure of the data should look something like this after running LCMS roadinspect. 
 ```
 ├───your_data_folder  

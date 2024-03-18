@@ -3,10 +3,12 @@ import os
 import shutil
 import zipfile
 import xml.etree.ElementTree as ET
+from pre_cvat.db_writer import DBWriter
 from tqdm import tqdm
 class XML_CVAT_Parser:
     def __init__(self, data_dir, px_height, px_width, 
-                 mm_height, mm_width, mode, task_size):
+                 mm_height, mm_width, mode, task_size,
+                 begin_MM, end_MM, year, interstate):
         self.data_dir = data_dir  
         self.xml_dir = os.path.join(data_dir, "XML")
         self.xml_files = os.listdir(self.xml_dir)
@@ -19,7 +21,12 @@ class XML_CVAT_Parser:
         self.mode = mode
         self.task_size = task_size
         self.clean_folder(self.output_dir)
-
+        self.year = year
+    
+        # Create database name based off the name of interstate
+        interstate = interstate.replace('-', '')
+        self.db_writer = DBWriter(interstate, begin_MM, end_MM, 
+                                  year, px_height)   
         self.parse()
             
     
@@ -75,14 +82,20 @@ class XML_CVAT_Parser:
             subjoints_data = joint_list.find_all('Joint')
             for subjoint in subjoints_data:
                 endpoints = self.extract_endpoints(subjoint)
+
+                # retrieve faulting info and write to database
+                faulting_info = self.exctract_faulting_info(subjoint)
+                self.db_writer.write_faulting_entry(self.id, endpoints, 
+                                                    faulting_info)
+            
+                endpoints = self.convert_endpoints(endpoints)
                 endpoints = ';'.join([str(i) for i in endpoints])
                 # Subjoint polyline element#####################################
                 subjoint = ET.SubElement(image, 'polyline', 
                                         label='subjoint',
                                         occluded='0',
                                         points=endpoints,
-                                        z_order='0',
-                                        source='Faulting info here')   
+                                        z_order='0')   
                 ################################################################
             
             lanemarkers_data = soup.find_all('LaneMark')
@@ -122,6 +135,21 @@ class XML_CVAT_Parser:
         shutil.rmtree(task_dir)
        
 
+    def exctract_faulting_info(self, subjoint):
+        """Extracts the faulting information from the subjoint
+
+        Args:
+            subjoint (bs4.element.Tag): subjoint element
+
+        Returns:
+            list[float]: list of faulting values
+        """
+        try:
+            faulting_vals = subjoint.find('FaultMeasurements').get_text()
+            return [float(i) for i in faulting_vals.split()]   
+        except:
+            return []
+
     def extract_endpoints(self, subjoint):
         """Extracts the endpoints of the subjoint
 
@@ -135,6 +163,19 @@ class XML_CVAT_Parser:
         y1 = float(subjoint.find('Y1').get_text())
         x2 = float(subjoint.find('X2').get_text())
         y2 = float(subjoint.find('Y2').get_text())
+        return (x1, y1, x2, y2)
+
+
+    def convert_endpoints(self, endpoints):
+        """Converts the endpoints from millimeters to pixels
+
+        Args:
+            endpoints (tuple): (x1, y1, x2, y2)
+
+        Returns:
+            tuple: (x1, y1, x2, y2) in pixels
+        """
+        x1, y1, x2, y2 = endpoints
         x1 = self.convert_val_x(x1)
         x2 = self.convert_val_x(x2)
         y1 = self.convert_val_y(y1)
@@ -208,19 +249,7 @@ class XML_CVAT_Parser:
         return round(val * self.scale_factor_x, 2)
     
 
-    def zip_folder(self, output, folder):
-        """Zips the folder of interest
 
-        Args:
-            output (_type_): _description_
-            folder (_type_): _description_
-        """
-        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            for foldername, subfolders, filenames in os.walk(folder):
-                for filename in filenames:
-                    file_path = os.path.join(foldername, filename)
-                    arcname = os.path.relpath(file_path, folder)
-                    zip_file.write(file_path, arcname)
 
     
     

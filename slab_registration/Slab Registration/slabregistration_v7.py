@@ -76,7 +76,7 @@ class SlabRegistration:
     def prepare_data(self, filepath):
         for y in self.years:
             y_df = pandas.read_excel(filepath, sheet_name = str(y), dtype = {"slab_index": int})
-            y_df["Length"] = y_df["length"]/304.8
+            y_df["Length"] = y_df["Length"]/304.8
             if "Slab State" not in y_df.columns:
                 y_df["Slab State"] = ""
             if "Slab State 2" not in y_df.columns:
@@ -303,7 +303,7 @@ class SlabRegistration:
             y_df = pandas.DataFrame.from_dict(self.year_dics[y], orient='index')
             y_df["Comments"] = ""
             y_df.to_excel(writer, sheet_name = str(y), index_label = str(y) + " Slab ID")
-        writer.save()
+        writer._save()
         writer.close()
         print("Data successfully exported.")
     
