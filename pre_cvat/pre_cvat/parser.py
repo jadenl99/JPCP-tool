@@ -5,6 +5,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from pre_cvat.db_writer import DBWriter
 from tqdm import tqdm
+from datetime import datetime
 class XML_CVAT_Parser:
     def __init__(self, data_dir, px_height, px_width, 
                  mm_height, mm_width, mode, task_size,
@@ -25,8 +26,9 @@ class XML_CVAT_Parser:
     
         # Create database name based off the name of interstate
         interstate = interstate.replace('-', '')
+        
         self.db_writer = DBWriter(interstate, begin_MM, end_MM, 
-                                  year, px_height)   
+                                  year, mm_height)   
         self.parse()
             
     
@@ -66,7 +68,6 @@ class XML_CVAT_Parser:
                 os.mkdir(output_img_dir)
 
             img_name = self.image_name(xml_file)
-            xml = None
             with open(os.path.join(self.xml_dir, xml_file), "r") as f:
                 xml = f.read()
             # Image element#####################################################
@@ -77,7 +78,11 @@ class XML_CVAT_Parser:
                 open(os.path.join(output_img_dir, img_name), 'wb') as f2:
                 shutil.copyfileobj(f, f2)
             ####################################################################               
-            soup = BeautifulSoup(xml, 'xml')
+            soup = BeautifulSoup(xml, features='xml')
+            date_str = soup.find('SystemTimeAndDate').get_text()
+            ### format: 2014/07/27 12:00:00
+            date_obj = self.extract_date(date_str)
+            self.db_writer.write_image_entry(self.get_im_id(xml_file), date_obj)
             joint_list = soup.find('JointList')
             subjoints_data = joint_list.find_all('Joint')
             for subjoint in subjoints_data:
@@ -146,7 +151,9 @@ class XML_CVAT_Parser:
         """
         try:
             faulting_vals = subjoint.find('FaultMeasurements').get_text()
-            return [float(i) for i in faulting_vals.split()]   
+            res = [float(i) for i in faulting_vals.split()]  
+            # -10000 is the default value for no measurement 
+            return [i for i in res if i != -10000]
         except:
             return []
 
@@ -181,7 +188,19 @@ class XML_CVAT_Parser:
         y1 = self.convert_val_y(y1)
         y2 = self.convert_val_y(y2)
         return (x1, y1, x2, y2)
+    
 
+    def extract_date(self, date_str: str) -> datetime:
+        """Extracts the date from the string
+
+        Args:
+            date_str (str): date string
+
+        Returns:
+            datetime: date object
+        """ 
+        date_str = date_str.split('.', 1)[0]
+        return datetime.strptime(date_str, '%Y/%m/%d %H:%M:%S')
 
     def image_name(self, xml_file):
         """Gets the name of the image from the XML file
@@ -248,6 +267,8 @@ class XML_CVAT_Parser:
         """
         return round(val * self.scale_factor_x, 2)
     
+
+
 
 
 

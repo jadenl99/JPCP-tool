@@ -1,16 +1,16 @@
 from pymongo import MongoClient
-
+from datetime import datetime
 class DBWriter:
     def __init__(self, interstate: str, MM_start: int,
-                 MM_end: int, year: int, px_height: int):
+                 MM_end: int, year: int, mm_height: int):
         # set up connection to database
         self.CONNECTION_STRING = 'mongodb://localhost:27017'
         self.client = MongoClient(self.CONNECTION_STRING)
         self.db = self.client['jpcp_deterioration']    
         self.subjoint_collection = self.db['raw_subjoint_data']
         self.segment_collection = self.db['segments']
-        
-        self.px_height = px_height  
+        self.img_collection = self.db['image_data']
+        self.mm_height = mm_height  
         self.year = year
         self.MM_start = MM_start
         self.MM_end = MM_end
@@ -20,12 +20,13 @@ class DBWriter:
 
         # in case there are any entries from previous runs
         self.subjoint_collection.delete_many({'seg_year_id': self.year_id})
+        self.img_collection.delete_many({'seg_year_id': self.year_id})
 
 
     def write_faulting_entry(self, 
                              index: int, 
                              endpoints: tuple[float], 
-                             faulting_info: str):
+                             faulting_info: list[float]):
         """Writes an entry to the faulting_values collection in the database.
 
         Args:
@@ -34,8 +35,8 @@ class DBWriter:
             in millimeters
             faulting_info (str): the faulting information of the subjoint
         """
-        y1 = endpoints[1] + self.px_height * index
-        y2 = endpoints[3] + self.px_height * index
+        y1 = endpoints[1] + self.mm_height * index
+        y2 = endpoints[3] + self.mm_height * index
         x1 = endpoints[0]
         x2 = endpoints[2]
         entry = {
@@ -45,7 +46,7 @@ class DBWriter:
             'y_max': max(y1, y2),
             'x_min': min(x1, x2),
             'x_max': max(x1, x2)
-        }
+        }                                       
         self.subjoint_collection.insert_one(entry)
 
 
@@ -65,10 +66,13 @@ class DBWriter:
             'MM_start': self.MM_start,
             'MM_end': self.MM_end
         }
+        seg_id = (f'{self.interstate}_MM{self.MM_start}_' + 
+                  f'MM{self.MM_end}')
         seg_year_id = (f'{self.interstate}_MM{self.MM_start}_' + 
                        f'MM{self.MM_end}_{self.year}')
         
         template = {
+            '_id': seg_id, # 'interstate_MMstart_MMend
             'interstate': self.interstate,
             'MM_start': self.MM_start,
             'MM_end': self.MM_end,
@@ -87,3 +91,17 @@ class DBWriter:
             )
         
         return seg_year_id
+    
+
+    def write_image_entry(self, index: str, date: datetime):
+        """Writes an entry to the image_data collection in the database.
+
+        Args:
+            index (int): index of the current XML file
+        """
+        entry = {
+            'seg_year_id': self.year_id,
+            'img_id': int(index),
+            'date': date
+        }
+        self.img_collection.insert_one(entry)

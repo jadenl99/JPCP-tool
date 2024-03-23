@@ -29,7 +29,7 @@ Directions for running code:
   * To test the model after training, run `python val.py --task test --data slab.yaml --device 0 --weights runs/train/{exp#}/weights/best.pt`
 
 * Georgia Tech data with LinearSVC:
-  * Run `python main.py -f crop-slabs -d {path-to-data}` on both MP18-17 and MP22 datasets
+  * Run `python main.py -f crop-slabs -d <path-to-data>` on both MP18-17 and MP22 datasets
   * Manually create ground truth CSV files classifying each extracted slab image as unreplaced (0)/replaced (1)/faulty (-1)
   * Run `slab-analysis.ipynb` to generate CSV file from slab length and histogram data
   * Run `slab-classification.ipynb` to create and train LinearSVC model, and determine best hypertuning parameters and metrics analysis with Scikit-learn
@@ -45,7 +45,7 @@ Directions for running code:
 │   ├───Range
 |   ├───XML
 ```
-   * Run `python main.py -f crop-slabs -d {path-to-data} --mode range intensity`
+   * Run `python main.py -f crop-slabs -d <path-to-data> --mode range intensity`
 * To crop both range and intensity images using ManualXML:
   * Run the same command, adding the `-o` flag. Ensure that you have a folder named `XML` inside the data folder that contains all the ManualXML data.
 

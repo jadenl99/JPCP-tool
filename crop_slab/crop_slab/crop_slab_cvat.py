@@ -14,92 +14,35 @@ from collections import deque
 from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
+from crop_slab.slab_writer import SlabWriter
+from file_manager.crop_files import CropFileManager
+
 import numpy as np
 class CropSlabsCVAT:
-    def __init__(self, data_path, im_size, im_unit="px", mode=['range']):
+    def __init__(self, data_path, im_size, im_unit, mode, 
+                 begin_MM, end_MM, year, interstate):
         # filepath of the dataset
         self.data_path = data_path
         self.im_size = im_size
         self.im_unit = im_unit
         self.im_length_mm = 5000
-
-        
-
-        self.annotation_file = os.path.join(self.data_path, 'CVAT_output/annotations.xml')
-        if not os.path.exists(self.annotation_file):
-            raise ValueError("Annotations file could not be found.")
-
-        self.slab_path = os.path.join(self.data_path, "Slabs")
-        if not os.path.exists(self.slab_path):
-            os.mkdir(self.slab_path)
-        
-        self.csv_path = os.path.join(self.data_path, "slabs.csv")  # Slab file
-        self.txt_path = os.path.join(self.data_path, "debug.txt")  # Debug file
-        self.input_im_path = None
-        self.output_im_path = None
-
-    
+        self.file_manager = CropFileManager(data_path, year)
+        self.slab_writer = SlabWriter(interstate, begin_MM, end_MM, year)
         self.slab_num = 1
         self.first_im = 0
  
-
-
-        self.clean_folder()  # Cleaning folders; comment as necessary
-        
         for single_mode in mode:
             self.slab_num = 1
-            self.input_im_path = os.path.join(self.data_path, single_mode.capitalize())
-            self.input_im_files = self.filter_files(self.input_im_path, "jpg")
-            self.output_im_path = os.path.join(self.slab_path, 'output_' + single_mode)
-            os.mkdir(self.output_im_path)
+            self.file_manager.switch_image_mode(single_mode)
             self.crop()
             
         
-
-
-    def get_im_id(self, s):
-
-        # From util file; retrieves image by ID
-        s = s[::-1]
-        start_index = -1
-        end_index = -1
-        for i, c in enumerate(s):
-            if c.isdigit():
-                end_index = i + 1
-                if start_index == -1:
-                    start_index = i
-            elif start_index > -1:
-                break
-        if start_index == -1:
-            return None
-
-        return int(s[start_index:end_index][::-1])
-
-
-    def filter_files(self, path, file_type) -> list:
-        # Returns files of specified file type
-        filtered = list(filter(lambda file: 
-                               file.split(".")[-1] == file_type, 
-                               os.listdir(path)))
-        filtered.sort(key=lambda f: self.get_im_id(f))
-        return filtered
-
-    def clean_folder(self):
-        # Removing previous slab images and metadata; comment as necessary
-        try:
-            shutil.rmtree(self.slab_path)
-        except:
-            pass
-
-        os.mkdir(self.slab_path)
-
-
     def crop(self):
         """Algorithm to crop slabs from the dataset. 
         """
         NUM_JOINTS_PER_IMAGE = 2    
         
-        with open(self.csv_path, 'w', newline='') as range_csv:
+        with open(self.file_manager.csv_path, 'w', newline='') as range_csv:
 
             fields = ["slab_index", "length (mm)", "width (mm)", 
                       "start_im", "end_im", "y_offset (mm)",
@@ -110,7 +53,7 @@ class CropSlabsCVAT:
             joint_queue = deque()
             curr_joint = None
             # Iterate through all manual_xml files
-            xml_data = open(self.annotation_file)
+            xml_data = open(self.file_manager.annotation_file)
             xml_soup = BeautifulSoup(xml_data, "lxml")
             images = xml_soup.find_all('image')
             for i, image in enumerate(tqdm(images)):
@@ -146,7 +89,7 @@ class CropSlabsCVAT:
                 self.produce_image(joint_queue[0], curr_joint, writer)
 
             # delete if cutoff slab is not necessary to include
-            top_y = len(self.input_im_files) * self.im_length_mm - 1
+            top_y = len(self.file_manager.input_im_files) * self.im_length_mm - 1
             top_joint = HorizontalJoint([SubJoint(0, top_y, 3600, top_y)])   
             self.produce_image(curr_joint, top_joint, writer)
         # end write
@@ -292,11 +235,10 @@ class CropSlabsCVAT:
             img[:y, x] = [0, 0, 0]
             
         
-        
-
+    
         # save image to files
         cv2.imwrite(
-            os.path.join(self.output_im_path, str(self.slab_num) + '.jpg'), img
+            os.path.join(self.file_manager.output_im_path, str(self.slab_num) + '.jpg'), img
             )    
 
         
@@ -313,11 +255,13 @@ class CropSlabsCVAT:
         Returns:
             np.ndarray: the joined image
         """
+        input_path = self.file_manager.input_im_path
+        input_files = self.file_manager.input_im_files
         img = cv2.imread(
-            os.path.join(self.input_im_path, self.input_im_files[bottom_img_index]))
+            os.path.join(input_path, input_files[bottom_img_index]))
         for i in range(bottom_img_index + 1, top_img_index + 1):
             temp_img = cv2.imread(
-                os.path.join(self.input_im_path, self.input_im_files[i])
+                os.path.join(input_path, input_files[i])
                 )
             img = cv2.vconcat([temp_img, img])
         return img
@@ -343,18 +287,25 @@ class CropSlabsCVAT:
         y_offset = bottom_joint.get_y_midpoint()
         y_min = int(bottom_joint.get_min_y())
         y_max = int(top_joint.get_max_y())
- 
+        input_files = self.file_manager.input_im_files
         writer.writerow({
                         "slab_index": self.slab_num,
                         "length (mm)": length,
                         "width (mm)": width,
-                        "start_im": self.input_im_files[bottom_img_index],
-                        "end_im": self.input_im_files[top_img_index],
+                        "start_im": input_files[bottom_img_index],
+                        "end_im": input_files[top_img_index],
                         # y_offset calculated always using bottom left corner
                         "y_offset (mm)": y_offset, 
                         "y_min (mm)": y_min,
                         "y_max (mm)": y_max  
                         })
+        
+
+        start_im = self.file_manager.get_im_id(input_files[bottom_img_index]) 
+        end_im = self.file_manager.get_im_id(input_files[top_img_index])
+        self.slab_writer.write_slab_entry(self.slab_num, length, width, 
+                                          start_im, end_im, y_offset, 
+                                          y_min, y_max, bottom_joint)
         
 
 if __name__ == '__main__':

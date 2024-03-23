@@ -79,15 +79,6 @@ if __name__ == '__main__':
     if func not in {"crop-slabs", "detect-joints"}:
         raise ValueError("Please enter a valid function name.")
 
-    if os.path.isdir(dir):
-        if not os.path.isdir(os.path.join(dir, "Range"))\
-                or not os.path.isdir(os.path.join(dir, "XML")):
-            raise ValueError(
-                "'Range' or 'XML' subdirectory could not be found in provided directory."
-            )
-    else:
-        raise ValueError("Data source directory could not be found.")
-
     if size <= 0:
         raise ValueError("Please enter a valid image size.")
 
@@ -114,4 +105,4 @@ if __name__ == '__main__':
     if func == "crop-slabs" and o:
         cs = CropSlabs(dir, size, unit, mode, begin_MM, end_MM, year, interstate)
     else:
-        cs = CropSlabsCVAT(dir, size, unit, mode)
+        cs = CropSlabsCVAT(dir, size, unit, mode, begin_MM, end_MM, year, interstate)

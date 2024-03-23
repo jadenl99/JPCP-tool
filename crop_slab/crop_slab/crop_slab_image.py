@@ -26,7 +26,7 @@ class CropSlabs:
         self.im_length_mm = 5000
 
         self.db_name = f'{interstate}_MM{begin_MM}_to_MM{end_MM}'
-        self.slab_writer = SlabWriter(self.db_name, year)
+        self.slab_writer = SlabWriter(interstate, begin_MM, end_MM, year)
 
         self.xml_path = os.path.join(self.data_path, "ManualXML")
 
@@ -251,9 +251,11 @@ class CropSlabs:
         scale_factor = self.im_size / self.im_length_mm
         y_min = int(bottom_joint.get_min_y() - y_offset)
         y_max = int(top_joint.get_max_y() - y_offset)
-        x_min = int(bottom_joint.left_bound)
-        x_max = int(bottom_joint.right_bound)
-        
+        x_min = int(bottom_joint.get_min_x())
+        x_max = int(bottom_joint.get_max_x())
+        if (x_max - x_min) < 2750:
+            x_min = 0
+            x_max = 3600
         img = self.join_images(bottom_img_index, top_img_index)
         
         # since (0, 0) is top left and we take (0, 0) as bottom left, some
@@ -378,7 +380,7 @@ class CropSlabs:
         end_im = self.get_im_id(self.xml_list[top_img_index])
         self.slab_writer.write_slab_entry(self.slab_num, length, width, 
                                           start_im, end_im, y_offset, 
-                                          y_min, y_max)
+                                          y_min, y_max, bottom_joint)
 
 if __name__ == '__main__':
     CropSlabs('../data/MP18-17')
