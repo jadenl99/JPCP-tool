@@ -14,92 +14,51 @@ from collections import deque
 from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
+from crop_slab.slab_writer import SlabWriter
+from file_manager.crop_files import CropFileManager
+from utils.px_mm_converter import PXMMConverter
 import numpy as np
+import sys
 class CropSlabsCVAT:
-    def __init__(self, data_path, im_size, im_unit="px", mode=['range']):
+    def __init__(self, data_path, 
+                 px_height, px_width, 
+                 mm_height, mm_width,
+                 mode, begin_MM, end_MM, year, interstate):
         # filepath of the dataset
+        self.recorded = False
         self.data_path = data_path
-        self.im_size = im_size
-        self.im_unit = im_unit
+        self.px_height = px_height
+        self.px_width = px_width
+        self.mm_height = mm_height
+        self.mm_width = mm_width
         self.im_length_mm = 5000
-
-        
-
-        self.annotation_file = os.path.join(self.data_path, 'CVAT_output/annotations.xml')
-        if not os.path.exists(self.annotation_file):
-            raise ValueError("Annotations file could not be found.")
-
-        self.slab_path = os.path.join(self.data_path, "Slabs")
-        if not os.path.exists(self.slab_path):
-            os.mkdir(self.slab_path)
-        
-        self.csv_path = os.path.join(self.data_path, "slabs.csv")  # Slab file
-        self.txt_path = os.path.join(self.data_path, "debug.txt")  # Debug file
-        self.input_im_path = None
-        self.output_im_path = None
-
-    
+        self.file_manager = CropFileManager(data_path, year)
+        self.scaler = None
+        self.slab_writer = None
         self.slab_num = 1
         self.first_im = 0
- 
-
-
-        self.clean_folder()  # Cleaning folders; comment as necessary
-        
         for single_mode in mode:
+            with open(self.file_manager.txt_path, 'w') as debug_file:
+                pass
             self.slab_num = 1
-            self.input_im_path = os.path.join(self.data_path, single_mode.capitalize())
-            self.input_im_files = self.filter_files(self.input_im_path, "jpg")
-            self.output_im_path = os.path.join(self.slab_path, 'output_' + single_mode)
-            os.mkdir(self.output_im_path)
+            self.file_manager.switch_image_mode(single_mode)
+            if not self.scaler:
+                self.scaler = PXMMConverter(self.px_height, self.px_width, 
+                                            self.mm_height, self.mm_width,
+                                            len(self.file_manager.input_im_files))
+            if not self.slab_writer:
+                self.slab_writer = SlabWriter(interstate, begin_MM, end_MM, year, self.scaler) 
+            self.num_files = len(self.file_manager.input_im_files)  
             self.crop()
-            
-        
+            self.recorded = True
 
-
-    def get_im_id(self, s):
-
-        # From util file; retrieves image by ID
-        s = s[::-1]
-        start_index = -1
-        end_index = -1
-        for i, c in enumerate(s):
-            if c.isdigit():
-                end_index = i + 1
-                if start_index == -1:
-                    start_index = i
-            elif start_index > -1:
-                break
-        if start_index == -1:
-            return None
-
-        return int(s[start_index:end_index][::-1])
-
-
-    def filter_files(self, path, file_type) -> list:
-        # Returns files of specified file type
-        filtered = list(filter(lambda file: 
-                               file.split(".")[-1] == file_type, 
-                               os.listdir(path)))
-        filtered.sort(key=lambda f: self.get_im_id(f))
-        return filtered
-
-    def clean_folder(self):
-        # Removing previous slab images and metadata; comment as necessary
-        try:
-            shutil.rmtree(self.slab_path)
-        except:
-            pass
-
-        os.mkdir(self.slab_path)
-
-
+ 
     def crop(self):
         """Algorithm to crop slabs from the dataset. 
         """
         NUM_JOINTS_PER_IMAGE = 2    
         
-        with open(self.csv_path, 'w', newline='') as range_csv:
+        with open(self.file_manager.csv_path, 'w', newline='') as range_csv:
 
             fields = ["slab_index", "length (mm)", "width (mm)", 
                       "start_im", "end_im", "y_offset (mm)",
@@ -110,7 +69,7 @@ class CropSlabsCVAT:
             joint_queue = deque()
             curr_joint = None
             # Iterate through all manual_xml files
-            xml_data = open(self.annotation_file)
+            xml_data = open(self.file_manager.annotation_file)
             xml_soup = BeautifulSoup(xml_data, "lxml")
             images = xml_soup.find_all('image')
             for i, image in enumerate(tqdm(images)):
@@ -118,10 +77,9 @@ class CropSlabsCVAT:
                 subjoints_data = [subjoint for subjoint in subjoints_data
                              if subjoint['label'] == 'subjoint']
 
-               
-                
                 if curr_joint is None:
-                    curr_joint = HorizontalJoint([SubJoint(0, 0, 3600, 0)])
+                    bottom_y = len(self.file_manager.input_im_files) * self.px_height - 1
+                    curr_joint = HorizontalJoint([SubJoint(0, bottom_y, self.px_width - 1, bottom_y)])
                 # Fetch all joint segments data in the xml file
                 subjoints = self.generate_subjoints_list(subjoints_data, i)
                 for subjoint in subjoints:
@@ -146,8 +104,7 @@ class CropSlabsCVAT:
                 self.produce_image(joint_queue[0], curr_joint, writer)
 
             # delete if cutoff slab is not necessary to include
-            top_y = len(self.input_im_files) * self.im_length_mm - 1
-            top_joint = HorizontalJoint([SubJoint(0, top_y, 3600, top_y)])   
+            top_joint = HorizontalJoint([SubJoint(0, 0, self.px_width - 1, 0)])   
             self.produce_image(curr_joint, top_joint, writer)
         # end write
                     
@@ -170,9 +127,9 @@ class CropSlabsCVAT:
         subjoints = []
         for subjoint_data in subjoints_data:
             subjoint = self.create_subjoint_obj(subjoint_data, i)
-            if subjoint is not None and subjoint.dist > 200:
+            if subjoint is not None and subjoint.dist > 50:
                 subjoints.append(subjoint)
-        subjoints.sort(key=lambda subjoint: subjoint.y1)
+        subjoints.sort(key=lambda subjoint: subjoint.y1, reverse=True)
         return subjoints               
     
 
@@ -194,16 +151,10 @@ class CropSlabsCVAT:
         points = subjoint_data['points']     
         points = points.replace(',', ';')
         points = points.split(';')
-        scale_factor = self.im_length_mm / self.im_size
-        x1 = int(float(points[0]) * scale_factor)
-        y1 = self.im_length_mm - int(float(points[1]) * scale_factor) + i * self.im_length_mm
-        x2 = int(float(points[2]) * scale_factor)
-        y2 = self.im_length_mm - int(float(points[3]) * scale_factor) + i * self.im_length_mm
-
-
-        
-            
-        
+        x1 = int(float(points[0]))
+        y1 = self.scaler.px_abs_to_rel(int(float(points[1])), i)
+        x2 = int(float(points[2]))
+        y2 = self.scaler.px_abs_to_rel(int(float(points[3])), i)
         try:
             subjoint = SubJoint(int(x1), int(y1), int(x2), int(y2))
         except ValueError:
@@ -225,36 +176,24 @@ class CropSlabsCVAT:
             top_joint (HorizontalJoint): the top joint
             writer (csv.DictWriter): the csv writer to write slab metadata to
         """
-        bottom_img_index = bottom_joint.get_bottom_img_id(0, self.im_length_mm)
-        top_img_index = top_joint.get_top_img_id(0, self.im_length_mm)
-        #print(bottom_img_index, top_img_index)
-        num_imgs_spanned = top_img_index - bottom_img_index + 1
-        y_offset = self.im_length_mm * bottom_img_index
-        scale_factor = self.im_size / self.im_length_mm
-        y_min = int(bottom_joint.get_min_y() - y_offset)
-        y_max = int(top_joint.get_max_y() - y_offset)
-        x_min = int(bottom_joint.get_min_x())
-        x_max = int(bottom_joint.get_max_x())
+        bottom_img_index = bottom_joint.get_bottom_img_id(self.num_files, self.px_height)
+        top_img_index = top_joint.get_top_img_id(self.num_files, self.px_height)
+        y_offset = self.scaler.px_abs_to_rel(0, top_img_index)
+        y_abs_min = int(top_joint.get_min_y() - y_offset)
+        y_abs_max = int(bottom_joint.get_max_y() - y_offset)
+        x_abs_min = int(bottom_joint.get_min_x())
+        x_abs_max = int(bottom_joint.get_max_x())
         
         img = self.join_images(bottom_img_index, top_img_index)
-        
-        # since (0, 0) is top left and we take (0, 0) as bottom left, some
-        # adjustments are needed
-        adj_y_min = int(scale_factor 
-                        * (num_imgs_spanned * self.im_length_mm - y_max))
-        adj_y_max = int(scale_factor 
-                        * (num_imgs_spanned * self.im_length_mm - y_min))
-        adj_x_min = int(scale_factor * x_min)
-        adj_x_max = int(scale_factor * x_max)    
-        #crop image first so less black pixels need to be added
-        img = img[adj_y_min:adj_y_max, adj_x_min:adj_x_max]
+        # crop image first so less black pixels need to be added
+        img = img[y_abs_min:y_abs_max, x_abs_min:x_abs_max]
         
 
         # blacken corners of image
         height, width, _ = img.shape
         subjoints = bottom_joint.subjoints
 
-        # trim bottom, function created using absolute position (mm)
+        # trim bottom
         bottom_func = LinearFunction(
             subjoints[0].x1, 
             subjoints[0].y1 - y_offset,
@@ -262,8 +201,7 @@ class CropSlabsCVAT:
             subjoints[-1].y2 - y_offset
             )
         for x in range(width):
-            # the y-cutoff is expressed relative to the cropped image
-            y = (height) - scale_factor * (bottom_func.get_y(x * (1 / scale_factor) + x_min) - y_min)
+            y = bottom_func.get_y(x_abs_min + x) - y_abs_min
             # account for edge calculations that may be slightly off
             if y < 0:
                 y = 0
@@ -281,8 +219,7 @@ class CropSlabsCVAT:
             subjoints[-1].y2 - y_offset
             )
         for x in range(width):
-            # the y-cutoff is expressed relative to the cropped image
-            y = (height) - scale_factor * (top_func.get_y(x * (1 / scale_factor) + x_min) - y_min)
+            y = top_func.get_y(x_abs_min + x) - y_abs_min
             # account for edge calculations that may be slightly off
             if y < 0:
                 y = 0
@@ -290,13 +227,10 @@ class CropSlabsCVAT:
                 y = height - 1
             y = int(y)
             img[:y, x] = [0, 0, 0]
-            
-        
-        
 
         # save image to files
         cv2.imwrite(
-            os.path.join(self.output_im_path, str(self.slab_num) + '.jpg'), img
+            os.path.join(self.file_manager.output_im_path, str(self.slab_num) + '.jpg'), img
             )    
 
         
@@ -304,7 +238,7 @@ class CropSlabsCVAT:
         self.slab_num += 1
 
     
-    def join_images(self, bottom_img_index, top_img_index):
+    def join_images(self, bottom_img_index: int, top_img_index: int) -> None:
         """Joins images together into one image
         Args:
             bottom_img_index (int): the index of the bottom image
@@ -313,11 +247,13 @@ class CropSlabsCVAT:
         Returns:
             np.ndarray: the joined image
         """
+        input_path = self.file_manager.input_im_path
+        input_files = self.file_manager.input_im_files
         img = cv2.imread(
-            os.path.join(self.input_im_path, self.input_im_files[bottom_img_index]))
+            os.path.join(input_path, input_files[bottom_img_index]))
         for i in range(bottom_img_index + 1, top_img_index + 1):
             temp_img = cv2.imread(
-                os.path.join(self.input_im_path, self.input_im_files[i])
+                os.path.join(input_path, input_files[i])
                 )
             img = cv2.vconcat([temp_img, img])
         return img
@@ -326,7 +262,7 @@ class CropSlabsCVAT:
     def write_slab_metadata(self, 
                             writer: csv.DictWriter, 
                             bottom_joint: HorizontalJoint, 
-                            top_joint: HorizontalJoint):
+                            top_joint: HorizontalJoint) -> None:
         """Writes slab metadata to csv file (one row)
 
         Args:
@@ -334,28 +270,57 @@ class CropSlabsCVAT:
             bottom_joint (HorizontalJoint): the bottom joint
             top_joint (HorizontalJoint): the top joint
         """
-        bottom_img_index = bottom_joint.get_bottom_img_id(0, self.im_length_mm)
-        top_img_index = top_joint.get_top_img_id(0, self.im_length_mm)
-        width = bottom_joint.right_bound - bottom_joint.left_bound
-        # measured from midpoint to midpoint
-        length = top_joint.get_y_midpoint() - bottom_joint.get_y_midpoint()
-        # uses absolute location of the bottom joint's midpoint
-        y_offset = bottom_joint.get_y_midpoint()
-        y_min = int(bottom_joint.get_min_y())
-        y_max = int(top_joint.get_max_y())
- 
+        bottom_img_index = bottom_joint.get_bottom_img_id(self.num_files, self.px_height)
+        top_img_index = top_joint.get_top_img_id(self.num_files, self.px_height)
+
+        px_width = bottom_joint.get_max_x() - bottom_joint.get_min_x()
+        px_length = bottom_joint.get_y_midpoint() - top_joint.get_y_midpoint()
+
+        mm_width = float(px_width) / self.scaler.scale_factor_x
+        mm_length = float(px_length) / self.scaler.scale_factor_y
+        round(mm_width, 2)
+        round(mm_length, 2)
+
+        y_px_offset = bottom_joint.get_y_midpoint()
+        y_px_bottom = int(bottom_joint.get_max_y())
+        y_px_top = int(top_joint.get_min_y())
+
+        y_mm_bottom = self.scaler.convert_px_to_mm_relative(
+            0, y_px_bottom % self.px_height, bottom_img_index
+            )[1]               
+        y_mm_offset = self.scaler.convert_px_to_mm_relative(
+            0, y_px_offset % self.px_height, bottom_img_index
+            )[1]
+        y_mm_top = self.scaler.convert_px_to_mm_relative(
+            0, y_px_top % self.px_height, top_img_index
+            )[1]        
+        
+        input_files = self.file_manager.input_im_files
         writer.writerow({
                         "slab_index": self.slab_num,
-                        "length (mm)": length,
-                        "width (mm)": width,
-                        "start_im": self.input_im_files[bottom_img_index],
-                        "end_im": self.input_im_files[top_img_index],
-                        # y_offset calculated always using bottom left corner
-                        "y_offset (mm)": y_offset, 
-                        "y_min (mm)": y_min,
-                        "y_max (mm)": y_max  
+                        "length (mm)": mm_length,
+                        "width (mm)": mm_width,
+                        "start_im": input_files[bottom_img_index],
+                        "end_im": input_files[top_img_index],      
+                        "y_offset (mm)": y_mm_offset, 
+                        "y_min (mm)": y_mm_bottom,
+                        "y_max (mm)": y_mm_top  
                         })
         
 
+        start_im = self.file_manager.get_im_id(input_files[bottom_img_index]) 
+        end_im = self.file_manager.get_im_id(input_files[top_img_index])
+        if not self.recorded:
+            self.slab_writer.write_slab_entry(self.slab_num, mm_length, mm_width, 
+                                          start_im, end_im, y_mm_offset, 
+                                          y_mm_bottom, y_mm_top, bottom_joint)
+            
+        if mm_width < 2750:
+            with open(self.file_manager.txt_path, 'a') as debug_file:
+                debug_file.write(str(self.slab_num) + '__________________________\n')
+                debug_file.write(f"Check image {start_im} to {end_im} in CVAT"
+                                 + "since width of joint is less than 2.75m.\n")
+                debug_file.write('__________________________\n')
+        
 if __name__ == '__main__':
     CropSlabsCVAT('../data/MP18-17')

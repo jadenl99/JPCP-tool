@@ -14,18 +14,21 @@ from collections import deque
 from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
+from crop_slab.slab_writer import SlabWriter
 import numpy as np
 class CropSlabs:
-    def __init__(self, data_path, im_size, im_unit="px", mode=['range']):
+    def __init__(self, data_path, im_size, im_unit, mode, 
+                 begin_MM, end_MM, year, interstate):
         # filepath of the dataset
         self.data_path = data_path
         self.im_size = im_size
         self.im_unit = im_unit
         self.im_length_mm = 5000
 
-        
+        self.db_name = f'{interstate}_MM{begin_MM}_to_MM{end_MM}'
+        self.slab_writer = SlabWriter(interstate, begin_MM, end_MM, year)
 
-        self.xml_path = os.path.join(self.data_path, "XML")
+        self.xml_path = os.path.join(self.data_path, "ManualXML")
 
         self.xml_list = self.filter_files(self.xml_path, "xml")
 
@@ -38,10 +41,9 @@ class CropSlabs:
         self.input_im_path = None
         self.output_im_path = None
 
-        self.slab_len = None
+    
         self.slab_num = 1
         self.first_im = 0
-        self.written = False
 
 
         self.clean_folder()  # Cleaning folders; comment as necessary
@@ -106,7 +108,7 @@ class CropSlabs:
                       "y_min (mm)", "y_max (mm)"]
             writer = csv.DictWriter(range_csv, fieldnames=fields)
             writer.writeheader()
-
+            
             joint_queue = deque()
             curr_joint = None
             # Iterate through all manual_xml files
@@ -248,9 +250,11 @@ class CropSlabs:
         scale_factor = self.im_size / self.im_length_mm
         y_min = int(bottom_joint.get_min_y() - y_offset)
         y_max = int(top_joint.get_max_y() - y_offset)
-        x_min = int(bottom_joint.left_bound)
-        x_max = int(bottom_joint.right_bound)
-        
+        x_min = int(bottom_joint.get_min_x())
+        x_max = int(bottom_joint.get_max_x())
+        if (x_max - x_min) < 2750:
+            x_min = 0
+            x_max = 3600
         img = self.join_images(bottom_img_index, top_img_index)
         
         # since (0, 0) is top left and we take (0, 0) as bottom left, some
@@ -371,6 +375,11 @@ class CropSlabs:
                         "y_max (mm)": y_max  
                         })
         
+        start_im = self.get_im_id(self.xml_list[bottom_img_index])  
+        end_im = self.get_im_id(self.xml_list[top_img_index])
+        self.slab_writer.write_slab_entry(self.slab_num, length, width, 
+                                          start_im, end_im, y_offset, 
+                                          y_min, y_max, bottom_joint)
 
 if __name__ == '__main__':
     CropSlabs('../data/MP18-17')

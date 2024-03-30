@@ -2,7 +2,7 @@ import argparse
 import os
 from crop_slab.crop_slab_cvat import CropSlabsCVAT
 from crop_slab.crop_slab_image import CropSlabs
-
+import sys
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Slab detection project for Georgia Tech Smart Cities Lab\n'
@@ -22,17 +22,29 @@ if __name__ == '__main__':
                         required=True,
                         help='Directory of XML and Range image data')
 
-    parser.add_argument('--size',
-                        metavar='<image size>',
+    parser.add_argument('--pxheight', 
+                        metavar='<height in pixels>',
                         type=int,
                         default=1250,
-                        help='Size of images')
-
-    parser.add_argument('--unit',
-                        metavar='<size units>',
-                        type=str,
-                        default='px',
-                        help='Units of image size ("mm" | "px")')
+                        help='Height of the images in pixels')
+    
+    parser.add_argument('--pxwidth', 
+                        metavar='<width in pixels>',
+                        type=int,
+                        default=1040,
+                        help='Width of the images in pixels')
+    
+    parser.add_argument('--mmheight', 
+                        metavar='<height in mm>',
+                        type=int,
+                        default=5000,
+                        help='Height of the images in millimeters')
+    
+    parser.add_argument('--mmwidth', 
+                        metavar='<width in mm>',
+                        type=int,
+                        default=4160,
+                        help='Width of the images in millimeters')
 
     parser.add_argument('--mode',
                         metavar='<cropping mode>',
@@ -42,36 +54,55 @@ if __name__ == '__main__':
                         default=['range'],
                         help='Image layer to process ("range" | "intensity")')
     
-    parser.add_argument('-o',
-                        action='store_true', 
-                        help='Whether to use the old version or not')
+    parser.add_argument('-b', 
+                        metavar='<beginning MM>',
+                        type=str,
+                        required=True,
+                        help='begining MM of the segment')
+    
+    parser.add_argument('-e',
+                        metavar='<ending MM>',
+                        type=str,
+                        required=True,
+                        help='ending MM of the segment')
+    
+    parser.add_argument('-y',
+                        metavar='<year>',
+                        type=int,
+                        required=True,
+                        help='Year of the data')
+    
+    parser.add_argument('-i', 
+                        metavar='<interstate>',
+                        type=str,
+                        required=True,
+                        help='Interstate of data (eg. I16WB)')
     
 
-    func, dir, size, unit, mode, o = list(vars(parser.parse_args()).values())
+    func, dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate = list(vars(parser.parse_args()).values())
+    begin_MM = int(begin_MM)
+    end_MM = int(end_MM)
+    year = int(year)
 
     if func not in {"crop-slabs", "detect-joints"}:
         raise ValueError("Please enter a valid function name.")
 
-    if os.path.isdir(dir):
-        if not os.path.isdir(os.path.join(dir, "Range"))\
-                or not os.path.isdir(os.path.join(dir, "XML")):
-            raise ValueError(
-                "'Range' or 'XML' subdirectory could not be found in provided directory."
-            )
-    else:
-        raise ValueError("Data source directory could not be found.")
-
-    if size <= 0:
-        raise ValueError("Please enter a valid image size.")
-
-    if unit not in {"px", "mm"}:
-        raise ValueError("Please enter a valid unit.")
-
+    
     if len(mode) > 2:
         raise ValueError("Mode argument can only have two or less values")
 
-    if func == "crop-slabs" and o:
-        cs = CropSlabs(dir, size, unit, mode)
-        print("Old version used")
-    else:
-        cs = CropSlabsCVAT(dir, size, unit, mode)
+
+    if begin_MM < 0 or end_MM < 0:
+        raise ValueError("MM cannot be negative")
+    
+    if len(str(year)) != 4 or year < 0:
+        raise ValueError("Please enter a valid year.")
+    
+    if ('EB' not in interstate 
+        and 'WB' not in interstate 
+        and 'NB' not in interstate 
+        and 'SB' not in interstate):
+        raise ValueError("Please specify direction of interstate highway \
+                         (eg. I16WB)")
+
+    CropSlabsCVAT(dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate)

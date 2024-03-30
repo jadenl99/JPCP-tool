@@ -1,8 +1,10 @@
 # replaced-slab-detection
 Originally created by Aditya Tapshalkar
 
-Improvements by Jaden Lim
+Improvements by Jaden Lim  
 
+## Overview
+The slab cropping application uses the fixed joints that were previously annotated in CVAT and crops the range/intensity image so that one image represents one and only one slab. It also stores data in the database about each slab, such as its y-offset, width, faulting average value, etc. After running the app, a warning might be thrown, so check the debug.txt files to see the potential joints that might have to be fixed in CVAT. 
 ___
 1.) University of California Pavement Research Center (UCPRC) data processing and You Only Look Once (YOLOv5) model generation
 * `ucdavis-data.csv`: CSV record of joints supplied by UCPRC
@@ -29,15 +31,15 @@ Directions for running code:
   * To test the model after training, run `python val.py --task test --data slab.yaml --device 0 --weights runs/train/{exp#}/weights/best.pt`
 
 * Georgia Tech data with LinearSVC:
-  * Run `python main.py -f crop-slabs -d {path-to-data}` on both MP18-17 and MP22 datasets
+  * Run `python main.py -f crop-slabs -d <path-to-ALL-data> -b <beginMM> -e <endMM> -i <interstate> -y <year>` on both MP18-17 and MP22 datasets. The interstate argument should be formated like `I16WB`, include direction as well. Note the data directory is the folder housing all years of data.
   * Manually create ground truth CSV files classifying each extracted slab image as unreplaced (0)/replaced (1)/faulty (-1)
   * Run `slab-analysis.ipynb` to generate CSV file from slab length and histogram data
   * Run `slab-classification.ipynb` to create and train LinearSVC model, and determine best hypertuning parameters and metrics analysis with Scikit-learn
 * To crop both range and intensity images using CVAT output:
   * To install dependencies, run `pip install -r requirements.txt`.
-  * Your file system should look something like this after the annotations have been done in CVAT. Note that the final annotations file must be placed in a folder called `CVAT_output`.
+  * Your file system should look something like this after the annotations have been done in CVAT. Note that the final annotations CVAT file must be placed in a folder called `CVAT_output`, so go ahead and make a `CVAT_output` folder for each year of data.
 ```
-├───<data_folder>
+├───<year>
 │   ├───CVAT_data
 │   ├───CVAT_output
 │   │   └───annotations.xml
@@ -45,11 +47,20 @@ Directions for running code:
 │   ├───Range
 |   ├───XML
 ```
-   * Run `python main.py -f crop-slabs -d {path-to-data} --mode range intensity`
-* To crop both range and intensity images using ManualXML:
-  * Run the same command, adding the `-o` flag. Ensure that you have a folder named `XML` inside the data folder that contains all the ManualXML data.
+   * Run `python main.py -f crop-slabs -d <path-to-ALL-data> -b <beginMM> -e <endMM> -i <interstate> -y <year> --mode range intensity`
+
 
 # Changelog
+## [2.2.0] - 2024-03-30
+* Additions
+  * Data is stored in MongoDB. For now, there is only support to connection to the default local MongoDB server.
+  * Faulting values are now automatically calculated. For now, averages of faulting values along wheelpath of the bottom joint for each slab are used for each slab.
+  * Debug.txt file outputs full joints that are less than 2.75m, since it is impossible to have a lanewidth smaller than that.
+  * Major refactoring done to modularize code.
+* Fixes
+  * Better cropping along lanemarkers. Uses bottom of the joint instead of lanemarker annotations, which may be inaccurate.
+* Deletions
+  * Removed support for Crack Digitzer. Now only supports CVAT annotations.
 ## [2.1.0] - 2024-02-27
 * Additions
   * Can now support modified annotations from CVAT. Data extraction from ManualXML files might be sunset soon once the new pipeline is working.
