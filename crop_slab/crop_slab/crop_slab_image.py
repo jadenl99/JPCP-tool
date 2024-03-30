@@ -41,10 +41,9 @@ class CropSlabs:
         self.input_im_path = None
         self.output_im_path = None
 
-        self.slab_len = None
+    
         self.slab_num = 1
         self.first_im = 0
-        self.written = False
 
 
         self.clean_folder()  # Cleaning folders; comment as necessary
@@ -109,7 +108,7 @@ class CropSlabs:
                       "y_min (mm)", "y_max (mm)"]
             writer = csv.DictWriter(range_csv, fieldnames=fields)
             writer.writeheader()
-
+            
             joint_queue = deque()
             curr_joint = None
             # Iterate through all manual_xml files

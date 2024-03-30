@@ -6,12 +6,12 @@ import xml.etree.ElementTree as ET
 from pre_cvat.db_writer import DBWriter
 from tqdm import tqdm
 from datetime import datetime
-class XML_CVAT_Parser:
+class ManualXML_CVAT_Parser:
     def __init__(self, data_dir, px_height, px_width, 
                  mm_height, mm_width, mode, task_size,
                  begin_MM, end_MM, year, interstate):
-        self.data_dir = os.path.join(data_dir, str(year))
-        self.xml_dir = os.path.join(self.data_dir, "XML")
+        self.data_dir = os.path.join(data_dir, str(year))  
+        self.xml_dir = os.path.join(self.data_dir, "ManualXML")
         self.xml_files = os.listdir(self.xml_dir)
         self.img_dir = os.path.join(self.data_dir, mode.capitalize())
         self.output_dir = os.path.join(self.data_dir, "CVAT_data")
@@ -27,8 +27,7 @@ class XML_CVAT_Parser:
         # Create database name based off the name of interstate
         interstate = interstate.replace('-', '')
         
-        self.db_writer = DBWriter(interstate, begin_MM, end_MM, 
-                                  year, mm_height)   
+      
         self.parse()
             
     
@@ -78,21 +77,11 @@ class XML_CVAT_Parser:
                 open(os.path.join(output_img_dir, img_name), 'wb') as f2:
                 shutil.copyfileobj(f, f2)
             ####################################################################               
-            soup = BeautifulSoup(xml, features='xml')
-            date_str = soup.find('SystemTimeAndDate').get_text()
-            ### format: 2014/07/27 12:00:00
-            date_obj = self.extract_date(date_str)
-            self.db_writer.write_image_entry(self.get_im_id(xml_file), date_obj)
-            joint_list = soup.find('JointList')
-            subjoints_data = joint_list.find_all('Joint')
+            soup = BeautifulSoup(xml, features='lxml')
+            joint_list = soup.find('jointlist')
+            subjoints_data = joint_list.find_all('joint')
             for subjoint in subjoints_data:
                 endpoints = self.extract_endpoints(subjoint)
-
-                # retrieve faulting info and write to database
-                faulting_info = self.exctract_faulting_info(subjoint)
-                self.db_writer.write_faulting_entry(self.id, endpoints, 
-                                                    faulting_info)
-            
                 endpoints = self.convert_endpoints(endpoints)
                 endpoints = ';'.join([str(i) for i in endpoints])
                 # Subjoint polyline element#####################################
@@ -103,9 +92,9 @@ class XML_CVAT_Parser:
                                         z_order='0')   
                 ################################################################
             
-            lanemarkers_data = soup.find_all('LaneMark')
+            lanemarkers_data = soup.find_all('lanemark')
             for lanemarker in lanemarkers_data:
-                x = float(lanemarker.find('Position').get_text())
+                x = float(lanemarker.find('position').get_text())
                 x = self.convert_val_x(x)
                 # Lanemarker point element######################################
                 lanemarker = ET.SubElement(image, 'polyline', 
@@ -120,23 +109,7 @@ class XML_CVAT_Parser:
 
 
     
-    def exctract_faulting_info(self, subjoint):
-        """Extracts the faulting information from the subjoint
-
-        Args:
-            subjoint (bs4.element.Tag): subjoint element
-
-        Returns:
-            list[float]: list of faulting values
-        """
-        try:
-            faulting_vals = subjoint.find('FaultMeasurements').get_text()
-            res = [float(i) for i in faulting_vals.split()]  
-            # -10000 is the default value for no measurement 
-            return [i for i in res if i != -10000]
-        except:
-            return []
-
+        
             
 
     def create_task_zip(self, annotations: ET.Element, task_dir: str):
@@ -165,10 +138,10 @@ class XML_CVAT_Parser:
         Returns:
             tuple: (x1, y1, x2, y2)
         """
-        x1 = float(subjoint.find('X1').get_text())
-        y1 = float(subjoint.find('Y1').get_text())
-        x2 = float(subjoint.find('X2').get_text())
-        y2 = float(subjoint.find('Y2').get_text())
+        x1 = float(subjoint.find('x1').get_text())
+        y1 = float(subjoint.find('y1').get_text())
+        x2 = float(subjoint.find('x2').get_text())
+        y2 = float(subjoint.find('y2').get_text())
         return (x1, y1, x2, y2)
 
 
@@ -269,6 +242,21 @@ class XML_CVAT_Parser:
 
 
 
+if __name__ == "__main__":
+    data_dir = 'data'
+    px_height = 1250
+    px_width = 1040
+    mm_height = 1250 * 4
+    mm_width = 1040 * 4
+    mode = 'range'
+    task_size = 1000000000
+    begin_MM = 22
+    end_MM = 12
+    year = 2014
+    interstate = 'I16WB'
+    ManualXML_CVAT_Parser(data_dir, px_height, px_width, 
+                          mm_height, mm_width, mode, task_size,
+                          begin_MM, end_MM, year, interstate)
 
 
     

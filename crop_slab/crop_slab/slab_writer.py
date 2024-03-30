@@ -1,9 +1,10 @@
 from pymongo import MongoClient
 from crop_slab.joint import HorizontalJoint
 import warnings
+from utils.px_mm_converter import PXMMConverter
 class SlabWriter:
     def __init__(self, interstate: str, MM_start: int,
-                 MM_end: int, year: int):
+                 MM_end: int, year: int, scaler: PXMMConverter):
         # set up connection to database
         CONNECTION_STRING = 'mongodb://localhost:27017'
         self.client = MongoClient(CONNECTION_STRING)
@@ -14,9 +15,8 @@ class SlabWriter:
         self.MM_start = MM_start
         self.MM_end = MM_end
         self.interstate = interstate
-
         self.seg_year_id = self.find_segment_year_id()
-
+        self.scaler = scaler
         # drop old entries from that year to make room for update if needed
         self.slab_collection.delete_many({'seg_year_id': self.seg_year_id}) 
 
@@ -97,24 +97,27 @@ class SlabWriter:
         Returns:
             float: the faulting value of the slab
         """
-        x_min = bottom_joint.get_min_x()
-        x_max = bottom_joint.get_max_x()
-        width = x_max - x_min
-        if (width < 2750):
-            print(bottom_joint)
-            print(f'x_min:{x_min}, x_max:{x_max}, width:{width}')
-        edge_buffer = (width - 2750) / 2
+        x_min_px = bottom_joint.get_min_x()
+        x_max_px = bottom_joint.get_max_x()
+        x_min_mm = self.scaler.convert_px_to_mm_relative(x_min_px, 0, 0)[0]
+        x_max_mm = self.scaler.convert_px_to_mm_relative(x_max_px, 0, 0)[0]
+        width_mm = x_max_mm - x_min_mm
+        edge_buffer = (width_mm - 2750) / 2
         if edge_buffer < 0:
             warnings.warn(f'Slab width is less than 2.75m, so faulting value \
                           for slab cannot be calculated. Ensure joints are \
                           annotated correctly.', Warning)
             return None
 
-        left_wp = (x_min + edge_buffer, x_min + edge_buffer + 1000)
-        right_wp = (x_max - edge_buffer - 1000, x_max - edge_buffer)
-        y_min = bottom_joint.get_min_y()
-        y_max = bottom_joint.get_max_y()
-
+        left_wp = (x_min_mm + edge_buffer, x_min_mm + edge_buffer + 1000)
+        right_wp = (x_max_mm - edge_buffer - 1000, x_max_mm - edge_buffer)
+        y_bottom_px = bottom_joint.get_max_y()
+        y_top_px = bottom_joint.get_min_y()
+        bottom_img_id = bottom_joint.get_bottom_img_id(self.scaler.num_images, self.scaler.px_height)
+        top_img_id = bottom_joint.get_top_img_id(self.scaler.num_images, self.scaler.px_height)
+        # print(y_bottom_px, y_top_px, bottom_img_id, top_img_id)
+        y_min_mm = self.scaler.convert_px_to_mm_relative(0, y_bottom_px % 1250, bottom_img_id)[1]
+        y_max_mm = self.scaler.convert_px_to_mm_relative(0, y_top_px % 1250, top_img_id)[1]
         # find all subjoints that are within the y-range of the bottom joint
         # of the slab
         raw_subjoints = self.raw_subjoint_collection.find(
@@ -123,11 +126,11 @@ class SlabWriter:
                 [
                     {
                         'seg_year_id': self.seg_year_id,
-                        'y_min': {'$gte': y_min - 100, '$lte': y_max + 100}
+                        'y_min': {'$gte': y_min_mm - 100, '$lte': y_max_mm + 100}
                     },
                     {
                         'seg_year_id': self.seg_year_id,
-                        'y_max': {'$gte': y_min - 100, '$lte': y_max + 100}
+                        'y_max': {'$gte': y_min_mm - 100, '$lte': y_max_mm + 100}
                     }
                 ]
             }
@@ -153,7 +156,6 @@ class SlabWriter:
                 r = int((l_right - sx_min) / single_width)
                 res = fault_vals[l:r+1]
                 res = [abs(x) for x in res] 
-                # print(f'left: {res}')
                 total += sum(res)
                 entries += len(res)
             
@@ -166,7 +168,6 @@ class SlabWriter:
                 r = int((r_right - sx_min) / single_width)
                 res = fault_vals[l:r+1]
                 res = [abs(x) for x in res]
-                # print(f'right: {res}')
                 total += sum(res)
                 entries += len(res)
 

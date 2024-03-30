@@ -64,10 +64,9 @@ class HorizontalJoint:
 
         y_max = self.get_max_y()
         y_min = self.get_min_y()
-        if (y_min - 100 <= new_subjoint.y1 <= y_max + 100 
-            or y_min - 100 <= new_subjoint.y2 <= y_max + 100):
-            return True        
-        return False
+        return (y_min - 25 <= new_subjoint.y1 <= y_max + 25 
+                or y_min - 25 <= new_subjoint.y2 <= y_max + 25)
+            
     
 
     def get_max_y(self) -> int:
@@ -114,35 +113,36 @@ class HorizontalJoint:
                    (min([subjoint.x1 for subjoint in self.subjoints])))
     
     
-    def get_bottom_img_id(self, base_id: int, img_size: int):
+    def get_bottom_img_id(self, num_images: int, img_size: int):
         """Gets the image id of the bottom of the horizontal joint.
 
         
         Args:
-            base_id (int): image id of the first image
-            img_size (int): size (length from top to bottom in mm) 
+            num_images (int): number of images in the segment
+            img_size (int): size (length from top to bottom in px) 
             of the input images
 
             
         Returns:
             int: image id of the bottom of the horizontal joint
         """
-        return base_id + int(self.get_min_y()) // img_size
+        return num_images - 1 - int(self.get_max_y()) // img_size
     
 
-    def get_top_img_id(self, base_id: int, img_size: int):
+    def get_top_img_id(self, num_images: int, img_size: int):
         """Gets the image id of the top of the horizontal joint.
 
         
         Args:
-            base_id (int): image id of the first image
-            img_size (int): size (length from top to bottom) of the input images
+            num_images (int): number of images in the segment
+            img_size (int): size (length from top to bottom in px) of the input 
+            images
 
             
         Returns:
             int: image id of the top of the horizontal joint
         """
-        return base_id + int(self.get_max_y()) // img_size
+        return num_images - 1 - int(self.get_min_y()) // img_size
         
     
     def get_y_midpoint(self) -> int:

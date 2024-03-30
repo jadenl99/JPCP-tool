@@ -81,8 +81,8 @@ if __name__ == '__main__':
     year = int(year)
 
     if os.path.isdir(dir):
-        if not os.path.isdir(os.path.join(dir, type))\
-                or not os.path.isdir(os.path.join(dir, "XML")):
+        if not os.path.isdir(os.path.join(dir, str(year), type))\
+                or not os.path.isdir(os.path.join(dir, str(year), "XML")):
             raise ValueError(
                 "'Image' or 'XML' subdirectory could " 
                 + "not be found in provided directory."
