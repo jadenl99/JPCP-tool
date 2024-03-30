@@ -8,7 +8,7 @@ The XML to CVAT parsers will take the LCMS data and create an annotations file t
 On the root directory of this application, run in the command line:  
 `python main.py -d <path_to_ALL_data> -i <interstate> -b <begining MM> -e <ending MM> -y <year>` 
 An example command line call for the I-16 WB segment for MM 22-12 is: 
-`python main.py -i I16WB -b 22 -e 12 -y 2014 -d data/2014`.
+`python main.py -i I16WB -b 22 -e 12 -y 2014 -d data`.
 Ensure the folder with all the data contains the XML folder, which should contain all the XML files from the LCMS output, as well as the range/intensity folders. The file structure of the data should look something like this after running LCMS roadinspect. 
 ```
 ├───<year>  
@@ -16,9 +16,9 @@ Ensure the folder with all the data contains the XML folder, which should contai
 |  ├───Range  
 |  └───XML  
 ```
-To optionally partition the dataset into multiple tasks to distribute to others, run the command with the additional argument `--tasksize <number>`.  
+To optionally partition the dataset into multiple tasks to distribute to others, run the command with the additional argument `--tasksize <number>` to specify how many images each task should contain.
 
-After running the program, the folder `CVAT_data` should be created, and inside contains one or more zip files that can be fed into CVAT.
+After running the program, the folder `CVAT_data` should be created, and inside contains one or more zip files that can be fed into CVAT. Refer to the slab boundary annotation guideline on further instructions.
 
 
 # Changelog
