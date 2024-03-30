@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from crop_slab.joint import HorizontalJoint
 import warnings
+import numpy as np
 from utils.px_mm_converter import PXMMConverter
 class SlabWriter:
     def __init__(self, interstate: str, MM_start: int,
@@ -139,41 +140,52 @@ class SlabWriter:
 
         total, entries = 0, 0
         for raw_subjoint in raw_subjoints:
-            sx_min = raw_subjoint['x_min']
-            sx_max = raw_subjoint['x_max']
             fault_vals = raw_subjoint['faulting_info']
             if not fault_vals:
                 continue
-            # width of each faulting value
-            single_width = (sx_max - sx_min) / len(fault_vals)
           
             # check left wheelpath
-            l_left = max(sx_min, left_wp[0])
-            l_right = min(sx_max, left_wp[1])
-            left_overlap = l_right - l_left
-            if left_overlap > 0:
-                l = int((l_left - sx_min) / single_width)
-                r = int((l_right - sx_min) / single_width)
-                res = fault_vals[l:r+1]
-                res = [abs(x) for x in res] 
-                total += sum(res)
-                entries += len(res)
+            l_values = np.array([item['data'] 
+                        for item in fault_vals 
+                        if left_wp[0] <= item['x_val'] <= left_wp[1]])
+            total += self.calc_faulting_sum(l_values)
+            entries += len(l_values)
             
             # check right wheelpath
-            r_left = max(sx_min, right_wp[0])
-            r_right = min(sx_max, right_wp[1])
-            right_overlap = r_right - r_left
-            if right_overlap > 0:
-                l = int((r_left - sx_min) / single_width)
-                r = int((r_right - sx_min) / single_width)
-                res = fault_vals[l:r+1]
-                res = [abs(x) for x in res]
-                total += sum(res)
-                entries += len(res)
-
+            r_values = np.array([item['data'] 
+                        for item in fault_vals 
+                        if right_wp[0] <= item['x_val'] <= right_wp[1]])
+            
+            total += self.calc_faulting_sum(r_values)
+            entries += len(r_values)
+                
+            
         if entries == 0:
             return None
         return float(total) / entries
+    
+
+    def calc_faulting_sum(self, arr: np.ndarray):
+        """Calculates the sum of the faulting values in the array, handling the
+        -10000 values by interpolating the median of the non-negative values.
+
+        Args:
+            arr (np.ndarray): array of faulting values
+
+        Returns:
+            float: sum of the faulting values
+        """
+        arr = arr.astype(float)
+        arr = np.absolute(arr)
+        mask = (arr > 9998)
+        if np.all(mask):
+            return 0
+        arr[mask] = np.nan
+        median = np.nanmedian(arr)
+        arr[mask] = median
+
+        return np.sum(arr)
+            
     
 
 

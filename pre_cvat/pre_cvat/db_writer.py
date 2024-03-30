@@ -26,7 +26,7 @@ class DBWriter:
     def write_faulting_entry(self, 
                              index: int, 
                              endpoints: tuple[float], 
-                             faulting_info: list[float]):
+                             faulting_info: list[tuple[float, float]]):
         """Writes an entry to the faulting_values collection in the database.
 
         Args:
@@ -39,9 +39,15 @@ class DBWriter:
         y2 = endpoints[3] + self.mm_height * index
         x1 = endpoints[0]
         x2 = endpoints[2]
+        max_x = max(x1, x2)
+        min_x = min(x1, x2)
+        filtered_faulting_info = [item
+                                  for item 
+                                  in faulting_info 
+                                  if min_x <= item['x_val'] <= max_x]
         entry = {
             'seg_year_id': self.year_id,
-            'faulting_info': faulting_info,
+            'faulting_info': filtered_faulting_info,
             'y_min': min(y1, y2),
             'y_max': max(y1, y2),
             'x_min': min(x1, x2),

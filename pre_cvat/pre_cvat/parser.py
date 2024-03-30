@@ -131,9 +131,10 @@ class XML_CVAT_Parser:
         """
         try:
             faulting_vals = subjoint.find('FaultMeasurements').get_text()
-            res = [float(i) for i in faulting_vals.split()]  
-            # -10000 is the default value for no measurement 
-            return [i for i in res if i != -10000]
+            data = [float(i) for i in faulting_vals.split()]  
+            x_vals = subjoint.find('FaultMeasurementPositionsX').get_text()
+            x_loc = [float(i) for i in x_vals.split()]
+            return [{'x_val': x, 'data': d} for x, d in zip(x_loc, data)]
         except:
             return []
 
