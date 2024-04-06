@@ -3,7 +3,6 @@ import copy
 import sys, os
 from os.path import exists
 
-
 class SlabRegistration:
     def __init__(self):
 
@@ -22,7 +21,7 @@ class SlabRegistration:
 
         #TEMP
         #self.fault_measurements_path = "XMLFiles_Averages.xlsx"  
-        
+
         self.years = None
         while self.years == None:
             years_input = input("Enter years from least to greatest, separate them with a comma (ex. 2014, 2015, 2017):\n").split(", ")
@@ -39,7 +38,7 @@ class SlabRegistration:
                 None
 
         self.interstate = input("Enter interstate name (ex. I-20):\n")
-        
+        self.interval = 4
         directions = ["NB", "SB", "WB", "EB"]
         self.direction = None
         while self.direction not in directions:
@@ -67,7 +66,7 @@ class SlabRegistration:
         self.out_filepath = self.interstate + "_MP" + str(self.mp) + "_BY" + str(self.by) + "_SlabRegistrationOutput.xlsx"
         self.app_filepath = self.interstate + "_MP" + str(self.mp) + "_BY" + str(self.by) + "_SlabClassificationInput.xlsx"
         self.fault_filepath = self.interstate + "_MP" + str(self.mp) + "_BY" + str(self.by) + "_Faulting.xlsx"
-        self.interval = 4
+        
 
         self.build(self.data_filepath, self.out_filepath)
 

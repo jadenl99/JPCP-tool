@@ -3,6 +3,7 @@ from crop_slab.joint import HorizontalJoint
 import warnings
 import numpy as np
 from utils.px_mm_converter import PXMMConverter
+import crop_slab.fault_calc as fc
 class SlabWriter:
     def __init__(self, interstate: str, MM_start: int,
                  MM_end: int, year: int, scaler: PXMMConverter):
@@ -60,9 +61,23 @@ class SlabWriter:
             bottom_joint (HorizontalJoint): the bottom joint of the slab
         """
         
-        faulting_val = self.calc_faulting(bottom_joint)
-        if faulting_val:
-            faulting_val = round(faulting_val, 2)
+        wheelpath_vals = self.get_faulting_data(bottom_joint)
+        mean_faulting = fc.avg_faulting(wheelpath_vals)
+        stdev_faulting = fc.stdev_faulting(wheelpath_vals)
+        median_faulting = fc.median_faulting(wheelpath_vals)
+        p95_faulting = fc.percentile95_faulting(wheelpath_vals)
+        positive_faulting = fc.percent_positive(wheelpath_vals)
+
+        if mean_faulting:
+            mean_faulting = round(mean_faulting, 2)
+        if stdev_faulting:
+            stdev_faulting = round(stdev_faulting, 2)
+        if median_faulting:
+            median_faulting = round(median_faulting, 2)
+        if p95_faulting:
+            p95_faulting = round(p95_faulting, 2)
+        if positive_faulting:
+            positive_faulting = round(positive_faulting, 2)
 
 
         entry = {
@@ -75,7 +90,11 @@ class SlabWriter:
             'y_offset': y_offset,
             'y_min': y_min,
             'y_max': y_max,
-            'faulting_val': faulting_val,
+            'mean_faulting': mean_faulting,
+            'stdev_faulting': stdev_faulting,
+            'median_faulting': median_faulting,
+            'p95_faulting': p95_faulting,
+            'positive_faulting': positive_faulting,
             'primary_state': None,
             'secondary_state': None,
             'special_state': None
@@ -84,19 +103,45 @@ class SlabWriter:
         self.slab_collection.insert_one(entry)
 
 
-    def calc_faulting(self, bottom_joint: HorizontalJoint):
-        """Calculates the faulting value of the slab. Averages all faulting
-        values within the wheelpath of the slab. Negative values are treated
-        as 0. Representation below not to scale.
+    def find_subjoints_in_range(self, y_min: float, y_max: float):
+        """Finds all subjoint data within the y-ranges
 
-        |-----------|---WP---|------|------|---WP---|-----------|
-        |edge buffer|   1m   |0.375m|0.375m|   1m   |edge buffer|   
-       
+        Args:
+            y_min (float): min y-value, expressed in absolute mm
+            y_max (float): max y-value, expressed in absolute mm
+
+        Returns:
+            pymongo.cursor.Cursor: cursor object containing all subjoint data
+            within the y-ranges
+        """
+        raw_subjoints = self.raw_subjoint_collection.find(
+            {
+                '$or': 
+                [
+                    {
+                        'seg_year_id': self.seg_year_id,
+                        'y_min': {'$gte': y_min - 100, '$lte': y_max + 100}
+                    },
+                    {
+                        'seg_year_id': self.seg_year_id,
+                        'y_max': {'$gte': y_min - 100, '$lte': y_max + 100}
+                    }
+                ]
+            }
+        )
+        return raw_subjoints
+    
+    
+    def get_faulting_data(self, bottom_joint: HorizontalJoint):
+        """Gets all the faulting data for the slab of interest, identified
+        with the bottom joint of the slab.
+
+        
         Args:
             bottom_joint (HorizontalJoint): the bottom joint of the slab
 
         Returns:
-            float: the faulting value of the slab
+            np.array: array of faulting values for the bottom joint
         """
         x_min_px = bottom_joint.get_min_x()
         x_max_px = bottom_joint.get_max_x()
@@ -108,7 +153,6 @@ class SlabWriter:
             warnings.warn(f'Slab width is less than 2.75m, so faulting value \
                           for slab cannot be calculated. Ensure joints are \
                           annotated correctly.', Warning)
-            return None
 
         left_wp = (x_min_mm + edge_buffer, x_min_mm + edge_buffer + 1000)
         right_wp = (x_max_mm - edge_buffer - 1000, x_max_mm - edge_buffer)
@@ -116,53 +160,29 @@ class SlabWriter:
         y_top_px = bottom_joint.get_min_y()
         bottom_img_id = bottom_joint.get_bottom_img_id(self.scaler.num_images, self.scaler.px_height)
         top_img_id = bottom_joint.get_top_img_id(self.scaler.num_images, self.scaler.px_height)
-        # print(y_bottom_px, y_top_px, bottom_img_id, top_img_id)
         y_min_mm = self.scaler.convert_px_to_mm_relative(0, y_bottom_px % 1250, bottom_img_id)[1]
         y_max_mm = self.scaler.convert_px_to_mm_relative(0, y_top_px % 1250, top_img_id)[1]
-        # find all subjoints that are within the y-range of the bottom joint
-        # of the slab
-        raw_subjoints = self.raw_subjoint_collection.find(
-            {
-                '$or': 
-                [
-                    {
-                        'seg_year_id': self.seg_year_id,
-                        'y_min': {'$gte': y_min_mm - 100, '$lte': y_max_mm + 100}
-                    },
-                    {
-                        'seg_year_id': self.seg_year_id,
-                        'y_max': {'$gte': y_min_mm - 100, '$lte': y_max_mm + 100}
-                    }
-                ]
-            }
-        )
 
-
-        total, entries = 0, 0
-        for raw_subjoint in raw_subjoints:
+        raw_subjoints = self.find_subjoints_in_range(y_min_mm, y_max_mm) 
+        
+        wheelpath_entries = np.array([])
+        for raw_subjoint in raw_subjoints:         
             fault_vals = raw_subjoint['faulting_info']
             if not fault_vals:
                 continue
-          
             # check left wheelpath
             l_values = np.array([item['data'] 
                         for item in fault_vals 
                         if left_wp[0] <= item['x_val'] <= left_wp[1]])
-            total += self.calc_faulting_sum(l_values)
-            entries += len(l_values)
-            
+        
             # check right wheelpath
             r_values = np.array([item['data'] 
                         for item in fault_vals 
                         if right_wp[0] <= item['x_val'] <= right_wp[1]])
-            
-            total += self.calc_faulting_sum(r_values)
-            entries += len(r_values)
-                
-            
-        if entries == 0:
-            return None
-        return float(total) / entries
+            wheelpath_entries = np.concatenate((wheelpath_entries, l_values, r_values))
+
+        return wheelpath_entries
+        
     
 
     def calc_faulting_sum(self, arr: np.ndarray):

@@ -167,3 +167,4 @@ dmypy.json
 cython_debug/
 /data
 /.vscode
+/crop_slab/faulting_values.txt
