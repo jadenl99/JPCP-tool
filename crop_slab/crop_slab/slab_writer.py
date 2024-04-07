@@ -1,9 +1,11 @@
 from pymongo import MongoClient
+import pymongo
 from crop_slab.joint import HorizontalJoint
 import warnings
 import numpy as np
 from utils.px_mm_converter import PXMMConverter
 import crop_slab.fault_calc as fc
+import math
 class SlabWriter:
     def __init__(self, interstate: str, MM_start: int,
                  MM_end: int, year: int, scaler: PXMMConverter):
@@ -60,14 +62,37 @@ class SlabWriter:
             y_max (float): max y-value of the slab
             bottom_joint (HorizontalJoint): the bottom joint of the slab
         """
-        
-        wheelpath_vals = self.get_faulting_data(bottom_joint)
-        mean_faulting = fc.avg_faulting(wheelpath_vals)
-        stdev_faulting = fc.stdev_faulting(wheelpath_vals)
-        median_faulting = fc.median_faulting(wheelpath_vals)
-        p95_faulting = fc.percentile95_faulting(wheelpath_vals)
-        positive_faulting = fc.percent_positive(wheelpath_vals)
+        x_min_px = bottom_joint.get_min_x()
+        x_max_px = bottom_joint.get_max_x()
+        x_min_mm = self.scaler.convert_px_to_mm_relative(x_min_px, 0, 0)[0]
+        x_max_mm = self.scaler.convert_px_to_mm_relative(x_max_px, 0, 0)[0]
+        width_mm = x_max_mm - x_min_mm
+        edge_buffer = (width_mm - 2750) / 2
+        if edge_buffer < 0:
+            warnings.warn(f'Slab width is less than 2.75m, so faulting value \
+                          for slab cannot be calculated. Ensure joints are \
+                          annotated correctly.', Warning)
+        # left buffer
+        z1 = (x_min_mm, x_min_mm + edge_buffer)
+        # left wheelpath
+        z2 = (x_min_mm + edge_buffer, x_min_mm + edge_buffer + 1000)
+        # center
+        z3 = (x_min_mm + edge_buffer + 1000, x_max_mm - edge_buffer - 1000)
+        # right wheelpath
+        z4 = (x_max_mm - edge_buffer - 1000, x_max_mm - edge_buffer)
+        # right buffer
+        z5 = (x_max_mm - edge_buffer, x_max_mm)
 
+        faulting_data = self.get_faulting_data(bottom_joint)    
+        faulting_vals = fc.find_subjoints_in_range(faulting_data, 
+                                                   x_min_mm, 
+                                                   x_max_mm)
+        stats = fc.calc_all_stats(faulting_vals)
+        mean_faulting = stats['mean']
+        stdev_faulting = stats['stdev']
+        median_faulting = stats['median']
+        p95_faulting = stats['percentile95']
+        positive_faulting = stats['percent_positive']
         if mean_faulting:
             mean_faulting = round(mean_faulting, 2)
         if stdev_faulting:
@@ -78,8 +103,37 @@ class SlabWriter:
             p95_faulting = round(p95_faulting, 2)
         if positive_faulting:
             positive_faulting = round(positive_faulting, 2)
+        
+        z1_vals = fc.find_subjoints_in_range(faulting_data, z1[0], z1[1])
+        z2_vals = fc.find_subjoints_in_range(faulting_data, z2[0], z2[1])
+        z3_vals = fc.find_subjoints_in_range(faulting_data, z3[0], z3[1])
+        z4_vals = fc.find_subjoints_in_range(faulting_data, z4[0], z4[1])
+        z5_vals = fc.find_subjoints_in_range(faulting_data, z5[0], z5[1])
 
+        z1_median = fc.median_faulting(z1_vals)
+        z2_median = fc.median_faulting(z2_vals)
+        z3_median = fc.median_faulting(z3_vals)
+        z4_median = fc.median_faulting(z4_vals)
+        z5_median = fc.median_faulting(z5_vals)
 
+        if z1_median:
+            z1_median = round(z1_median, 2)
+        if z2_median:
+            z2_median = round(z2_median, 2)
+        if z3_median:
+            z3_median = round(z3_median, 2)
+        if z4_median:
+            z4_median = round(z4_median, 2)
+        if z5_median:
+            z5_median = round(z5_median, 2)
+
+        num_faulting_entries = len(faulting_vals)
+        filtered_faulting_vals = fc.mask_outliers(faulting_vals)
+        num_outliers = int(np.sum(np.isnan(filtered_faulting_vals)))
+        invalid_faulting_vals = fc.mask_invalid(faulting_vals)
+        num_invalid = int(np.sum(np.isnan(invalid_faulting_vals)))
+        filtered_faulting_vals = fc.nn_interpolate(filtered_faulting_vals)
+        
         entry = {
             'seg_year_id': self.seg_year_id,
             'slab_index': slab_index,
@@ -90,11 +144,21 @@ class SlabWriter:
             'y_offset': y_offset,
             'y_min': y_min,
             'y_max': y_max,
+            'num_faulting_vals': num_faulting_entries,
+            'num_invalid': num_invalid,
+            'num_outliers': num_outliers,
+            'faulting_vals': faulting_vals.tolist(),
+            'filtered_faulting_vals': filtered_faulting_vals.tolist(),
             'mean_faulting': mean_faulting,
             'stdev_faulting': stdev_faulting,
             'median_faulting': median_faulting,
             'p95_faulting': p95_faulting,
             'positive_faulting': positive_faulting,
+            'z1_median': z1_median,
+            'z2_median': z2_median,
+            'z3_median': z3_median,
+            'z4_median': z4_median,
+            'z5_median': z5_median,
             'primary_state': None,
             'secondary_state': None,
             'special_state': None
@@ -128,9 +192,8 @@ class SlabWriter:
                     }
                 ]
             }
-        )
+        ).sort("x_min", pymongo.ASCENDING)
         return raw_subjoints
-    
     
     def get_faulting_data(self, bottom_joint: HorizontalJoint):
         """Gets all the faulting data for the slab of interest, identified
@@ -141,21 +204,8 @@ class SlabWriter:
             bottom_joint (HorizontalJoint): the bottom joint of the slab
 
         Returns:
-            np.array: array of faulting values for the bottom joint
+            np.array: list of faulting values for the bottom joint
         """
-        x_min_px = bottom_joint.get_min_x()
-        x_max_px = bottom_joint.get_max_x()
-        x_min_mm = self.scaler.convert_px_to_mm_relative(x_min_px, 0, 0)[0]
-        x_max_mm = self.scaler.convert_px_to_mm_relative(x_max_px, 0, 0)[0]
-        width_mm = x_max_mm - x_min_mm
-        edge_buffer = (width_mm - 2750) / 2
-        if edge_buffer < 0:
-            warnings.warn(f'Slab width is less than 2.75m, so faulting value \
-                          for slab cannot be calculated. Ensure joints are \
-                          annotated correctly.', Warning)
-
-        left_wp = (x_min_mm + edge_buffer, x_min_mm + edge_buffer + 1000)
-        right_wp = (x_max_mm - edge_buffer - 1000, x_max_mm - edge_buffer)
         y_bottom_px = bottom_joint.get_max_y()
         y_top_px = bottom_joint.get_min_y()
         bottom_img_id = bottom_joint.get_bottom_img_id(self.scaler.num_images, self.scaler.px_height)
@@ -164,47 +214,23 @@ class SlabWriter:
         y_max_mm = self.scaler.convert_px_to_mm_relative(0, y_top_px % 1250, top_img_id)[1]
 
         raw_subjoints = self.find_subjoints_in_range(y_min_mm, y_max_mm) 
-        
-        wheelpath_entries = np.array([])
+
+        faulting_entries = []
+        x_cover = -1
         for raw_subjoint in raw_subjoints:         
             fault_vals = raw_subjoint['faulting_info']
             if not fault_vals:
                 continue
-            # check left wheelpath
-            l_values = np.array([item['data'] 
-                        for item in fault_vals 
-                        if left_wp[0] <= item['x_val'] <= left_wp[1]])
-        
-            # check right wheelpath
-            r_values = np.array([item['data'] 
-                        for item in fault_vals 
-                        if right_wp[0] <= item['x_val'] <= right_wp[1]])
-            wheelpath_entries = np.concatenate((wheelpath_entries, l_values, r_values))
+            fault_vals = [entry for entry in fault_vals if entry['x_val'] > x_cover]
+            if not fault_vals:
+                continue
+            x_cover = fault_vals[-1]['x_val']
+            faulting_entries.extend(fault_vals)
 
-        return wheelpath_entries
+        return faulting_entries
         
     
-
-    def calc_faulting_sum(self, arr: np.ndarray):
-        """Calculates the sum of the faulting values in the array, handling the
-        -10000 values by interpolating the median of the non-negative values.
-
-        Args:
-            arr (np.ndarray): array of faulting values
-
-        Returns:
-            float: sum of the faulting values
-        """
-        arr = arr.astype(float)
-        arr = np.absolute(arr)
-        mask = (arr > 9998)
-        if np.all(mask):
-            return 0
-        arr[mask] = np.nan
-        median = np.nanmedian(arr)
-        arr[mask] = median
-
-        return np.sum(arr)
+    
             
     
 
