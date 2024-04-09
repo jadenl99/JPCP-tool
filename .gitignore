@@ -167,4 +167,6 @@ dmypy.json
 cython_debug/
 /data
 /.vscode
-/crop_slab/faulting_values.txt
+
+/data_pipeline/fault_log.txt
+/data_pipeline/faulting_values.txt
