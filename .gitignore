@@ -167,3 +167,8 @@ dmypy.json
 cython_debug/
 /data
 /.vscode
+
+/data_pipeline/fault_log.txt
+/data_pipeline/faulting_values.txt
+*.ipynb
+.ipynb_checkpoints/
