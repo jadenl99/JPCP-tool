@@ -1,7 +1,7 @@
 # LCMS Data Processing Pipeline
 Jaden Lim 
-Smart City Infrastructure Lab
-Spring 2024 Improvement Project 
+Smart City Infrastructure Lab 
+Spring 2024 Improvement Project  
 
 ## Overview 
 Given the LCMS XML files and processed range and intensity images, a slab inventory for a specific segement, as well as useful data that can be used for can be created using this application. The pipeline is split into subapplications, the first one being the `pre_cvat` application, which extracts XML data, the second one being the  `crop_slab` application, which crops images, and the third being `registration`, which actually creates the slab inventory. All these subapplications can be run in the root directory of `data_pipeline`. 
