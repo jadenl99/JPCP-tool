@@ -22,7 +22,7 @@ class CropFileManager(FileManager):
         if not os.path.exists(self.slab_path):
             os.mkdir(self.slab_path)  
         self.csv_path = os.path.join(self.data_path, "slabs.csv")  # Slab file
-        self.txt_path = os.path.join(self.data_path, "debug.txt")  # Debug file
+        self.debug_path = os.path.join(self.data_path, "debug.csv")  # Debug file
     
         self.join_annotations()
         self.clean_slab_folder()  # Cleaning folders; comment as necessary

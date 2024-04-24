@@ -3,7 +3,6 @@ import os
 import shutil
 import zipfile
 import xml.etree.ElementTree as ET
-from pre_cvat.db_writer import DBWriter
 from tqdm import tqdm
 from datetime import datetime
 class ManualXML_CVAT_Parser:

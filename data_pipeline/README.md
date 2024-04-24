@@ -1,85 +1,65 @@
-# replaced-slab-detection
-Originally created by Aditya Tapshalkar
+# LCMS Data Processing Pipeline
+Jaden Lim 
+Smart City Infrastructure Lab
+Spring 2024 Improvement Project 
 
-Improvements by Jaden Lim  
+## Overview 
+Given the LCMS XML files and processed range and intensity images, a slab inventory for a specific segement, as well as useful data that can be used for can be created using this application. The pipeline is split into subapplications, the first one being the `pre_cvat` application, which extracts XML data, the second one being the  `crop_slab` application, which crops images, and the third being `registration`, which actually creates the slab inventory. All these subapplications can be run in the root directory of `data_pipeline`. 
 
-## Overview
-The slab cropping application uses the fixed joints that were previously annotated in CVAT and crops the range/intensity image so that one image represents one and only one slab. It also stores data in the database about each slab, such as its y-offset, width, faulting average value, etc. After running the app, a warning might be thrown, so check the debug.txt files to see the potential joints that might have to be fixed in CVAT. 
-___
-1.) University of California Pavement Research Center (UCPRC) data processing and You Only Look Once (YOLOv5) model generation
-* `ucdavis-data.csv`: CSV record of joints supplied by UCPRC
-* `data_collection.ipynb`: Jupyter Notebook script for aggregate and splitting of UCPRC joint images and data into training and testing datasets, and generation of YOLO annotated `.txt` files
-  * Important features: joint image, replaced slab ground truth (`ucprc_isr_ahead`)
-* YOLOv5 (https://github.com/ultralytics/yolov5) found in Microsoft Teams "Code Deliverable" directory
-  * Configuration: `data=slab.yaml; epochs=300; image_size=320; batch_size=16; device=NVIDIA GeForce RTX 2070 SUPER`
-  * Results found in `YOLO_results` folder
-  
-2.) LinearSVM Model with Georgia Tech's LCMS data
-  * Data includes MP18-17 and MP22 Range and Intensity image data
-  * `crop_slab_image.py`: Refined slab cropping code, using a sliding window technique while iterating through XML files
-  * `LinearSVM-model` folder contains data processing and SVM model generation techniques
-    * `slab_data` contains manually-generated ground truth annotations for processed slabs (1 for replaced slab; 0 for unreplaced slab; -1 for improperly cropped slab)
-    * `slab-analysis.ipynb`: Experimenting with unreplaced/replaced slab differentiation, using techniques such as Gaussian filtering and Local Binary Patterning; generation of `all_inputs_gts.csv` file for slab image features after processing, including slab length and histogram data
-    * `slab-classification.ipynb`: Testing and tuning of LinearSVC model from Scikit-learn on replaced slab classification and analysis of LinearSVC model accuracy metrics 
+## Setting Up the File System for all Data
+Your data folder should initially look something like this, which will serve as input for the pipeline application:
+```
+├───<data>
+│   ├───2014
+│   │   └───Range
+│   │   └───Intensity
+│   │   └───XML
+|   |   └───CVAT_output
+│   ├───2015
+│   ├───2016
+│   ├───... (continue with all the years to register)
+```
+with your `<data>` folder (which you can name it anything you want) containing all your data for the segment of interest that you are interested in preparing. The `<data>` folder should have many subfolders, one for each year in the format `XXXX`, and each year should contain folders containing all the XML data, Intensity, and Range images. Create a new empty folder called `CVAT_output` for each year.
 
-___
-Directions for running code:
-* UCPRC data with YOLOv5:
-  * Run `data_collection.ipynb`
-  * Download `yolov5` folder from Microsoft Teams; ensure `train`, `val`, and `test` paths in `slab.yaml` point to `train` and `test` folders generated from `data_collection.ipynb`
-  * `cd` into `yolov5` folder; run `python train.py --data slab.yaml --batch-size 16 --epochs 300 --device 0 --img 320 --weights yolov5s.pt`
-  * To test the model after training, run `python val.py --task test --data slab.yaml --device 0 --weights runs/train/{exp#}/weights/best.pt`
+## Step 1: Extracting LCMS XML Data 
+### Input 
+Set up the file system as follows above. 
+### Output 
+Creates zip files to feed into the CVAT application. These zip files will be under a newly created folder under `CVAT_data` in the `year` folders that the script is run on. Also stores image metadata and faulting information for each joint into the database. 
+### Instructions for Running 
+* On the root directory of this application, run in the command line for each year:  
+  * `python xml_parse.py -d <path_to_data> -i <interstate> -b <begining MM> -e <ending MM> -y <year>` 
+* Note that `<path_to_data>` should not be the `<year>` subdirectory - it should be the path to the folder containing all the segment data. 
+* If you want to get a `debug.csv` file to selectively annotate joints that might be incorrectly identified, run the above command first, then unzip the zip file and copy the generated `annotations.xml` file into the `CVAT_output` file for the year you are interested in annotating, then run:
+  * `python cropapp.py -f validation-only -d <path_to_data> -i <interstate> -b <begining MM> -e <ending MM> -y <year>` 
+* Refer to the Slab Boundary Annotation Guideline document for information on how to verify joints before proceeding to step 2. 
 
-* Georgia Tech data with LinearSVC:
-  * Run `python main.py -f crop-slabs -d <path-to-ALL-data> -b <beginMM> -e <endMM> -i <interstate> -y <year>` on both MP18-17 and MP22 datasets. The interstate argument should be formated like `I16WB`, include direction as well. Note the data directory is the folder housing all years of data.
-  * Manually create ground truth CSV files classifying each extracted slab image as unreplaced (0)/replaced (1)/faulty (-1)
-  * Run `slab-analysis.ipynb` to generate CSV file from slab length and histogram data
-  * Run `slab-classification.ipynb` to create and train LinearSVC model, and determine best hypertuning parameters and metrics analysis with Scikit-learn
-* To crop both range and intensity images using CVAT output:
-  * To install dependencies, run `pip install -r requirements.txt`.
-  * Your file system should look something like this after the annotations have been done in CVAT. Note that the final annotations CVAT file must be placed in a folder called `CVAT_output`, so go ahead and make a `CVAT_output` folder for each year of data.
+## Step 2: Slab Cropping 
+### Input 
+For each year, the necessary inputs are
 ```
 ├───<year>
-│   ├───CVAT_data
 │   ├───CVAT_output
 │   │   └───annotations.xml
 │   ├───Intensity
 │   ├───Range
-|   ├───XML
-```
-   * Run `python main.py -f crop-slabs -d <path-to-ALL-data> -b <beginMM> -e <endMM> -i <interstate> -y <year> --mode range intensity`
+``` 
+Note that the `annotations.xml` file generated after CVAT modifications should go under the `CVAT_output` folder. 
+### Output
+In the specified `<year>` folder, a `Slabs` folder will be created/overriden with the cropped range and/or intensity images. A `debug.csv` file indicating joints to be fixed in CVAT as well as a `slabs.csv` file that contains slab data will be generated. In addition, data for each slab, such as slab length, y-offset, faulting values, etc. will be stored in the database. 
+### Instructions for Running
+* Run `python cropapp.py -f crop-slabs -d <path-to-data> -b <beginMM> -e <endMM> -i <interstate> -y <year> --mode range intensity`. The interstate argument should be formated like `I16WB`, include direction as well. Run this for each year in the segment.
+  * If you only want to crop the range or intensity, drop `range` or `intensity`.
+* If you only want to validate the joints are correctly annotated, run the function `-f validation-only` instead. Note that the check for the joints is not comprehensive. 
+
+## Step 3: Slab Registration 
+### Input 
+There is no input, other than the connection to the database. 
+### Output 
+Registration data will be stored in the database. 
+### Instructions for Running 
+* Run `python reg_slabs.py -b <beginMM> -e <endMM> -i <interstate>`.
+* Follow the prompts.
 
 
-# Changelog
-## [2.2.0] - 2024-03-30
-* Additions
-  * Data is stored in MongoDB. For now, there is only support to connection to the default local MongoDB server.
-  * Faulting values are now automatically calculated. For now, averages of faulting values along wheelpath of the bottom joint for each slab are used for each slab.
-  * Debug.txt file outputs full joints that are less than 2.75m, since it is impossible to have a lanewidth smaller than that.
-  * Major refactoring done to modularize code.
-* Fixes
-  * Better cropping along lanemarkers. Uses bottom of the joint instead of lanemarker annotations, which may be inaccurate.
-* Deletions
-  * Removed support for Crack Digitzer. Now only supports CVAT annotations.
-## [2.1.0] - 2024-02-27
-* Additions
-  * Can now support modified annotations from CVAT. Data extraction from ManualXML files might be sunset soon once the new pipeline is working.
-## [2.0.2] - 2024-02-17
-* Fixes
-  * Zero length subjoints would halt the program. Now subjoints that are too small in length are ignored.
-## [2.0.1] - 2024-02-04
-* Additions
-  * Add support to simutaneously crop range and intensity images
-* Fixes
-  * y-offset and length on slabs.csv were calculated incorrectly for each slab. This has been fixed.
-* Removed
-  * Input images are not scaled up anymore to correspond to the slab's dimensions in mm before cropping. Cropping is now done on the original input image's dimensions to improve runtime of the program and to save space for the output files.
-
-## [2.0.0] - 2024-01-31
-* Additions
-  * The lower and upper corners that do not belong to the slab of interest are blackened out.
-  * y_min and y_max information displays on the slabs.csv file.
-* Fixes
-  * Previously, the slabs were cropped at the midpoint of both the bottom and top joints, resulting in the loss of information on the corners of slabs. The slab cropper now crops at the y_min and y_max of the bottom and top slabs, respectively.
-  * Output images were previously saved in png format, which took up too much space. Output images are now saved to jpg format to match the format of input images.
 

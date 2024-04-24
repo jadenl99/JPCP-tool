@@ -170,3 +170,5 @@ cython_debug/
 
 /data_pipeline/fault_log.txt
 /data_pipeline/faulting_values.txt
+*.ipynb
+.ipynb_checkpoints/

@@ -7,6 +7,7 @@ class RegistrationWriter:
         self.client = MongoClient(CONNECTION_STRING)
         self.db = self.client['jpcp_deterioration']
         self.registration_collection = self.db['registration']
+        self.slab_collection = self.db['slabs']
         self.beginMM = beginMM
         self.endMM = endMM
         self.interstate = interstate.replace("-", "")
@@ -31,8 +32,8 @@ class RegistrationWriter:
         Returns:
             Cursor: a cursor object containing all slabs
         """
-        seg_year_id = f'{self.interstate}_{self.beginMM}_{self.endMM}_{year}'
-        result = self.registration_collection.find(
+        seg_year_id = f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}_{year}'
+        result = self.slab_collection.find(
             {'seg_year_id': seg_year_id,
             'slab_index': {'$gte': start_slab}}
         ).sort('slab_index', pymongo.ASCENDING) 
@@ -67,6 +68,19 @@ class RegistrationWriter:
         self.registration_collection.insert_one(entry)
 
     
+    def update_registration_data(self, registration_data: list[dict]):
+        """Updates the registration data in the registration collection
+
+        Args:
+            registration_data (list[dict]): The registration data to update
+        """
+        self.registration_collection.update_one(
+            {'segment_id': self.segment_id,
+             'base_year': self.base_year,
+             'years': self.years},
+            {'$set': {'registration_data': registration_data}}
+        )
+
     def get_slab_data(self, year: int, slab_index: int):
         """Gets the data for a specific slab
 
@@ -79,13 +93,15 @@ class RegistrationWriter:
         Returns:
             dict: The slab data
         """
-        seg_year_id = f'{self.interstate}_{self.beginMM}_{self.endMM}_{year}'
-        result = self.registration_collection.find_one(
+        seg_year_id = f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}_{year}'
+        print(seg_year_id)
+        result = self.slab_collection.find_one(
             {'seg_year_id': seg_year_id, 
              'slab_index': slab_index}
         )
         if not result:
-            raise ValueError(f'No data found for the specified slab {slab_index} in the year {year}')
+            raise ValueError(f'No data found for the specified slab '
+                             f'{slab_index} in the year {year}')
         return result
     
 
@@ -96,8 +112,8 @@ class RegistrationWriter:
             year (int): The year to update the offsets for
             shift (float): The amount to shift the slabs by
         """
-        seg_year_id = f'{self.segment_id}_{year}'
-        self.registration_collection.update_many(
+        seg_year_id = f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}_{year}'
+        self.slab_collection.update_many(
             {'seg_year_id': seg_year_id},
             {'$inc': {'y_offset': shift}}
         )

@@ -94,38 +94,47 @@ class SlabWriter:
         p95_faulting = stats['percentile95']
         positive_faulting = stats['percent_positive']
         if mean_faulting:
-            mean_faulting = round(mean_faulting, 2)
+            mean_faulting = round(mean_faulting, 4)
         if stdev_faulting:
-            stdev_faulting = round(stdev_faulting, 2)
+            stdev_faulting = round(stdev_faulting, 4)
         if median_faulting:
-            median_faulting = round(median_faulting, 2)
+            median_faulting = round(median_faulting, 4)
         if p95_faulting:
-            p95_faulting = round(p95_faulting, 2)
+            p95_faulting = round(p95_faulting, 4)
         if positive_faulting:
-            positive_faulting = round(positive_faulting, 2)
+            positive_faulting = round(positive_faulting, 4)
         
-        z1_vals = fc.find_subjoints_in_range(faulting_data, z1[0], z1[1])
-        z2_vals = fc.find_subjoints_in_range(faulting_data, z2[0], z2[1])
-        z3_vals = fc.find_subjoints_in_range(faulting_data, z3[0], z3[1])
-        z4_vals = fc.find_subjoints_in_range(faulting_data, z4[0], z4[1])
-        z5_vals = fc.find_subjoints_in_range(faulting_data, z5[0], z5[1])
+        filtered_faulting_data = fc.find_subjoints_in_range_filtered(
+            faulting_data, x_min_mm, x_max_mm
+            )
+        z1_vals = fc.find_subjoints_in_range(filtered_faulting_data, z1[0], z1[1])
+        z2_vals = fc.find_subjoints_in_range(filtered_faulting_data, z2[0], z2[1])
+        z3_vals = fc.find_subjoints_in_range(filtered_faulting_data, z3[0], z3[1])
+        z4_vals = fc.find_subjoints_in_range(filtered_faulting_data, z4[0], z4[1])
+        z5_vals = fc.find_subjoints_in_range(filtered_faulting_data, z5[0], z5[1])
 
-        z1_median = fc.median_faulting(z1_vals)
-        z2_median = fc.median_faulting(z2_vals)
-        z3_median = fc.median_faulting(z3_vals)
-        z4_median = fc.median_faulting(z4_vals)
-        z5_median = fc.median_faulting(z5_vals)
+        z1_vals = np.abs(z1_vals)
+        z2_vals = np.abs(z2_vals)
+        z3_vals = np.abs(z3_vals)
+        z4_vals = np.abs(z4_vals)
+        z5_vals = np.abs(z5_vals)
+
+        z1_median = np.median(z1_vals)
+        z2_median = np.median(z2_vals)
+        z3_median = np.median(z3_vals)
+        z4_median = np.median(z4_vals)
+        z5_median = np.median(z5_vals)
 
         if z1_median:
-            z1_median = round(z1_median, 2)
+            z1_median = round(z1_median, 4)
         if z2_median:
-            z2_median = round(z2_median, 2)
+            z2_median = round(z2_median, 4)
         if z3_median:
-            z3_median = round(z3_median, 2)
+            z3_median = round(z3_median, 4)
         if z4_median:
-            z4_median = round(z4_median, 2)
+            z4_median = round(z4_median, 4)
         if z5_median:
-            z5_median = round(z5_median, 2)
+            z5_median = round(z5_median, 4)
 
         num_faulting_entries = len(faulting_vals)
         filtered_faulting_vals = fc.mask_outliers(faulting_vals)

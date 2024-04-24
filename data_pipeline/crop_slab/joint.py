@@ -5,7 +5,7 @@ class HorizontalJoint:
     """A horizontal joint is a joint that spans from the left boundary of the
     lane to the right boundary of the lane. Joints need not be parallel to the
     horizontal plane. A horizontal joint can possibly be diagonal, as long as
-    it satisfies the condition in the first sentance. Each horizontal joint is
+    it satisfies the condition in the first sentence. Each horizontal joint is
     composed of multiple subjoints.
 
     In the XML files, each horizontal joint is often broken up into two seperate
@@ -127,6 +127,21 @@ class HorizontalJoint:
             int: image id of the bottom of the horizontal joint
         """
         return num_images - 1 - int(self.get_max_y()) // img_size
+    
+
+    def get_midpoint_img_id(self, num_images: int, img_size: int):
+        """Gets the image id of the midpoint of the horizontal joint.
+
+        
+        Args:
+            num_images (int): number of images in the segment
+            img_size (int): size (length from top to bottom in px) of the input 
+            images
+
+        Returns:
+            int: image id of the midpoint of the horizontal joint
+        """
+        return num_images - 1 - int(self.get_y_midpoint()) // img_size
     
 
     def get_top_img_id(self, num_images: int, img_size: int):

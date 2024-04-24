@@ -1,9 +1,9 @@
 from bs4 import BeautifulSoup
 import os
 import shutil
-import zipfile
+
 import xml.etree.ElementTree as ET
-from pre_cvat.db_writer import DBWriter
+from db_operation.db_writer import DBWriter
 from tqdm import tqdm
 from datetime import datetime
 class XML_CVAT_Parser:

@@ -14,7 +14,7 @@ from collections import deque
 from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
 from crop_slab.utils.functions import LinearFunction
-from crop_slab.slab_writer import SlabWriter
+from db_operation.slab_writer import SlabWriter
 from file_manager.crop_files import CropFileManager
 from utils.px_mm_converter import PXMMConverter
 import numpy as np
@@ -39,15 +39,16 @@ class CropSlabsCVAT:
         self.slab_num = 1
         self.first_im = 0
         for single_mode in mode:
-            with open(self.file_manager.txt_path, 'w') as debug_file:
-                pass
+            with open(self.file_manager.debug_path, 'w') as debug_file:
+                writer = csv.writer(debug_file)
+                writer.writerow(["start_img", "end_img", "message"]) 
             self.slab_num = 1
             self.file_manager.switch_image_mode(single_mode)
             if not self.scaler:
                 self.scaler = PXMMConverter(self.px_height, self.px_width, 
                                             self.mm_height, self.mm_width,
                                             len(self.file_manager.input_im_files))
-            if not self.slab_writer:
+            if not self.slab_writer and not self.validation_only:
                 self.slab_writer = SlabWriter(interstate, begin_MM, end_MM, year, self.scaler) 
             self.num_files = len(self.file_manager.input_im_files)  
             self.crop()
@@ -283,7 +284,10 @@ class CropSlabsCVAT:
             bottom_joint (HorizontalJoint): the bottom joint
             top_joint (HorizontalJoint): the top joint
         """
-        bottom_img_index = bottom_joint.get_bottom_img_id(self.num_files, self.px_height)
+        bottom_img_index = bottom_joint.get_bottom_img_id(self.num_files, 
+                                                          self.px_height)
+        mid_img_index = bottom_joint.get_midpoint_img_id(self.num_files, 
+                                                         self.px_height)
         top_img_index = top_joint.get_top_img_id(self.num_files, self.px_height)
 
         px_width = bottom_joint.get_max_x() - bottom_joint.get_min_x()
@@ -302,7 +306,7 @@ class CropSlabsCVAT:
             0, y_px_bottom % self.px_height, bottom_img_index
             )[1]               
         y_mm_offset = self.scaler.convert_px_to_mm_relative(
-            0, y_px_offset % self.px_height, bottom_img_index
+            0, y_px_offset % self.px_height, mid_img_index
             )[1]
         y_mm_top = self.scaler.convert_px_to_mm_relative(
             0, y_px_top % self.px_height, top_img_index
@@ -330,11 +334,11 @@ class CropSlabsCVAT:
                                           y_mm_bottom, y_mm_top, bottom_joint)
             
         if mm_width < 2750:
-            with open(self.file_manager.txt_path, 'a') as debug_file:
-                debug_file.write(str(self.slab_num) + '__________________________\n')
-                debug_file.write(f"Check image {start_im} to {end_im} in CVAT"
-                                 + "since width of joint is less than 2.75m.\n")
-                debug_file.write('__________________________\n')
+            with open(self.file_manager.debug_path, 'a') as debug_file:
+                writer = csv.writer(debug_file)
+                writer.writerow([start_im, end_im, 
+                                 "Check CVAT for mislabeled joint since width " 
+                                 "of detected joint is less than 2.75m"])
         
 if __name__ == '__main__':
     CropSlabsCVAT('../data/MP18-17')

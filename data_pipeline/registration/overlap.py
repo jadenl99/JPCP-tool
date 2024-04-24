@@ -41,14 +41,17 @@ def belongs_to(s1_offset: float, s1_length: float,
     overlap = overlap_offset_length(s1_offset, s1_length, s2_offset, s2_length)
     if overlap == 0:
         return OverlapType.NO_OVERLAP
-    elif overlap >= s1_length - 1220:
+    elif (abs(s1_offset - s2_offset) < 610 and 
+          abs((s1_offset + s1_length) - (s2_offset + s2_length)) < 610):
+    # overlap >= s1_length - 1220 and abs(s1_length - s2_length) < 610:
         return OverlapType.FULL_OVERLAP
-    elif overlap >= s1_length / 2:
+    elif overlap >= float(s1_length) / 2:
         return OverlapType.BASE_MAJORITY_OVERLAP
-    elif overlap >= s2_length / 2:
+    elif overlap >= float(s2_length) / 2:
         return OverlapType.CURRENT_MAJORITY_OVERLAP
     else:
         return OverlapType.MINOR_OVERLAP
         
+
 
 
