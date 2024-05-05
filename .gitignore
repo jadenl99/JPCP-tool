@@ -172,3 +172,4 @@ cython_debug/
 /data_pipeline/faulting_values.txt
 *.ipynb
 .ipynb_checkpoints/
+/notebooks

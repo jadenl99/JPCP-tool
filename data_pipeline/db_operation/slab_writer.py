@@ -107,12 +107,17 @@ class SlabWriter:
         filtered_faulting_data = fc.find_subjoints_in_range_filtered(
             faulting_data, x_min_mm, x_max_mm
             )
-        z1_vals = fc.find_subjoints_in_range(filtered_faulting_data, z1[0], z1[1])
-        z2_vals = fc.find_subjoints_in_range(filtered_faulting_data, z2[0], z2[1])
-        z3_vals = fc.find_subjoints_in_range(filtered_faulting_data, z3[0], z3[1])
-        z4_vals = fc.find_subjoints_in_range(filtered_faulting_data, z4[0], z4[1])
-        z5_vals = fc.find_subjoints_in_range(filtered_faulting_data, z5[0], z5[1])
-
+        # z1_vals = fc.find_subjoints_in_range(filtered_faulting_data, z1[0], z1[1])
+        # z2_vals = fc.find_subjoints_in_range(filtered_faulting_data, z2[0], z2[1])
+        # z3_vals = fc.find_subjoints_in_range(filtered_faulting_data, z3[0], z3[1])
+        # z4_vals = fc.find_subjoints_in_range(filtered_faulting_data, z4[0], z4[1])
+        # z5_vals = fc.find_subjoints_in_range(filtered_faulting_data, z5[0], z5[1])
+        z1_vals = 0
+        z2_vals = 0
+        z3_vals = 0
+        z4_vals = 0
+        z5_vals = 0
+        
         z1_vals = np.abs(z1_vals)
         z2_vals = np.abs(z2_vals)
         z3_vals = np.abs(z3_vals)

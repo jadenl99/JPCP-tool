@@ -3,7 +3,17 @@ import sys, os
 from os.path import exists
 from db_operation.registration_writer import RegistrationWriter
 from registration import overlap
-from registration.overlap import OverlapType
+from registration.overlap import OverlapType, AlignmentType
+
+
+MEMBERSHIP_THRESHOLD = 0.5
+
+# 610 mm = 2 feet, determines if BY/CY pair has joint alignment
+JOINT_THRESHOLD = 610 
+
+# Percentage of BY slab length that must be replaced to count as an R slab
+REPLACED_THRESHOLD = 0.25
+
 class SlabRegistration:
     def __init__(self, beginMM: int, endMM: int, interstate: str):
         self.minslablength = 100
@@ -21,6 +31,10 @@ class SlabRegistration:
             {
                 "base_id": x['slab_index'], 
                 "replaced": None,
+                "replaced_type": None,
+                "interior": 0,
+                "exterior": 0,
+                "aligned": 2,
                 str(self.by): [x['slab_index']]
             } 
             for x in self.by_slabs
@@ -88,6 +102,16 @@ class SlabRegistration:
 
 
     def categorize_by_length(self, year: int, first_slab: int): 
+        """
+        Goes through every BY/CY overlapping pair and determines if the pair 
+        should be associated with each other based on length. Also detects
+        misalignment and predicts the type of replacement that was done to a
+        specific BY slab.
+
+        Args:
+            year (int): CY year to categorize
+            first_slab (int): first slab index of the year
+        """
         # list of current slabs
         cy_slabs = list(self.writer.get_year_slab_data(year, first_slab))
         self.reg_data[0][str(year)] = []   
@@ -106,7 +130,8 @@ class SlabRegistration:
             by_length = self.by_slabs[byi]['length']
             cy_length = cy_slabs[cyi]['length']
             overlap_type = overlap.belongs_to(0, by_length, 
-                                              cy_rel_offset, cy_length)
+                                              cy_rel_offset, cy_length, 
+                                              MEMBERSHIP_THRESHOLD)
 
             # Check membership
             if (overlap_type == OverlapType.FULL_OVERLAP):
@@ -114,8 +139,58 @@ class SlabRegistration:
             elif (overlap_type == OverlapType.BASE_MAJORITY_OVERLAP or
                     overlap_type == OverlapType.CURRENT_MAJORITY_OVERLAP):
                 cy_entries.append(cy_slabs[cyi]['slab_index'])
-                if self.reg_data[byi]["replaced"] == None:
-                    self.reg_data[byi]["replaced"] = year
+
+            interior = exterior = aligned = 0
+            # left CY joint out of bounds of BY slab
+            if cy_rel_offset < -JOINT_THRESHOLD:
+                exterior += 1
+            # Left CY joint in bounds of BY slab
+            elif cy_rel_offset > JOINT_THRESHOLD:
+                interior += 1
+            # Left CY joint aligned with BY slab
+            else:
+                aligned += 1
+
+            CY_right = cy_rel_offset + cy_length
+            # Right CY joint out of bounds of BY slab
+            if CY_right > by_length + JOINT_THRESHOLD:
+                exterior += 1
+            # Right CY joint in bounds of BY slab
+            elif CY_right < by_length - JOINT_THRESHOLD:
+                interior += 1
+            # Right CY joint aligned with BY slab
+            else:
+                aligned += 1
+
+            rep_type = overlap.replacement_type(interior, exterior, aligned)
+            
+            existing_rep_year = self.reg_data[byi]['replaced']
+            existing_alignment = self.reg_data[byi]['replaced_type']
+            if existing_rep_year and existing_rep_year < year:
+                pass
+            elif rep_type == AlignmentType.FULL_TWO_ALIGN:
+                pass
+            elif (not existing_alignment 
+                  or rep_type.value > AlignmentType[existing_alignment].value):
+                if rep_type == AlignmentType.PARTIAL_EXTERIOR:
+                    if overlap.percent_BY_overlap(0, 
+                                                by_length, 
+                                                cy_rel_offset, 
+                                                cy_length) > REPLACED_THRESHOLD:
+                        self.reg_data[byi]['replaced'] = year
+                        self.reg_data[byi]['replaced_type'] = rep_type.name
+                    elif cy_length < 1900 and not existing_alignment:
+                        self.reg_data[byi]['replaced_type'] = 'JOINT_REPLACEMENT'
+                else:
+                    self.reg_data[byi]['replaced'] = year
+                    self.reg_data[byi]['replaced_type'] = rep_type.name
+                self.reg_data[byi]['interior'] = interior  
+                self.reg_data[byi]['exterior'] = exterior
+                self.reg_data[byi]['aligned'] = aligned
+
+        
+            
+
 
             # slabs end at the same point, recalibrate relative offset
             if abs(by_length - (cy_length + cy_rel_offset)) < self.interval:
