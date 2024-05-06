@@ -179,8 +179,9 @@ class SlabRegistration:
                                                 cy_length) > REPLACED_THRESHOLD:
                         self.reg_data[byi]['replaced'] = year
                         self.reg_data[byi]['replaced_type'] = rep_type.name
-                    elif cy_length < 1900 and not existing_alignment:
+                    elif cy_length < 1900:
                         self.reg_data[byi]['replaced_type'] = 'JOINT_REPLACEMENT'
+                        self.reg_data[byi]['replaced'] = None
                 else:
                     self.reg_data[byi]['replaced'] = year
                     self.reg_data[byi]['replaced_type'] = rep_type.name

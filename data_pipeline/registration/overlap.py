@@ -13,8 +13,8 @@ class AlignmentType(Enum):
     CY and BY joints"""
     PARTIAL_ALIGN = 0
     JOINT_REPLACEMENT = 1  
-    PARTIAL_EXTERIOR = 2
-    PARTIAL_INTERIOR = 3
+    PARTIAL_INTERIOR = 2
+    PARTIAL_EXTERIOR = 3
     FULL_TWO_EXTERIOR = 4
     FULL_ONE_EXTERIOR = 5
     FULL_TWO_ALIGN = 6
