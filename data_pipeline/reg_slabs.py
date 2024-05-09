@@ -21,8 +21,14 @@ if __name__ == '__main__':
                         required=True,
                         help='Interstate of data (eg. I16WB)')
     
+    parser.add_argument('-d',
+                        metavar='<filepath>',
+                        type=str,
+                        required=True,
+                        help='Directory for the CSV output file')
+    
 
-    begin_MM, end_MM, interstate = list(vars(parser.parse_args()).values())
+    begin_MM, end_MM, interstate, dir = list(vars(parser.parse_args()).values())
     begin_MM = int(begin_MM)
     end_MM = int(end_MM)
 
@@ -38,4 +44,4 @@ if __name__ == '__main__':
                          (eg. I16WB)")
 
     
-    SlabRegistration(begin_MM, end_MM, interstate)
+    SlabRegistration(begin_MM, end_MM, interstate, dir)

@@ -18,6 +18,7 @@ class AlignmentType(Enum):
     FULL_TWO_EXTERIOR = 4
     FULL_ONE_EXTERIOR = 5
     FULL_TWO_ALIGN = 6
+    OTHER_REPLACEMENT = 7
 
 
 
@@ -70,7 +71,13 @@ def belongs_to(s1_offset: float, s1_length: float,
         
 
 
-def replacement_type(interior: int, exterior: int, aligned: int):
+def replacement_type(interior: int, 
+                     exterior: int, 
+                     aligned: int, 
+                     cy_length: float, 
+                     by_length: float, 
+                     cy_offset: float, 
+                     replacement_threshold: float = 0.25):
     """Determines the type of replacement done based on the alignemnt of CY and
     BY joints
 
@@ -78,19 +85,45 @@ def replacement_type(interior: int, exterior: int, aligned: int):
         interior (int): number of CY interior joints
         exterior (int): number of CY exterior joints
         aligned (int): number of CY aligned joints
+        cy_length (float): length of the last CY slab overlapping the BY slab
+        by_length (float): length of the BY slab
+        cy_offset (float): offset of the last CY slab overlapping the BY slab
+        replacement_threshold (float): threshold to determine if the CY slab
+        replaces the BY slab in the partial exeterior case. Default is 0.25 
+    
+    Returns:
+        AlignmentType: The type of replacement done based on the alignment of CY
+        and BY joints
     """
-    if interior == 2:
-        return AlignmentType.PARTIAL_INTERIOR
-    elif exterior == 2:
-        return AlignmentType.FULL_TWO_EXTERIOR
-    elif aligned == 2:
+    if aligned == 2 and exterior == 0 and interior == 0:
         return AlignmentType.FULL_TWO_ALIGN
-    elif aligned and exterior:
+    
+    if aligned == 1 and exterior == 1 and interior == 0:
         return AlignmentType.FULL_ONE_EXTERIOR
-    elif aligned and interior:
+    
+    if aligned == 0 and exterior == 2 and interior == 0:
+        return AlignmentType.FULL_TWO_EXTERIOR
+    
+    if interior >= 2:
+        return AlignmentType.PARTIAL_INTERIOR
+    
+    if aligned == 2 and interior == 1 and exterior == 0:
         return AlignmentType.PARTIAL_ALIGN
-    else:
+    
+    # Handling Partial Exterior and Joint Replacement Cases
+    overlap_percentage = percent_BY_overlap(0, by_length, cy_offset, cy_length)
+
+    lower_bound = min(replacement_threshold, 1 - replacement_threshold)
+    upper_bound = max(replacement_threshold, 1 - replacement_threshold)
+    
+    if lower_bound <= overlap_percentage <= upper_bound:    
         return AlignmentType.PARTIAL_EXTERIOR
+
+    if cy_length <= 2400:
+        return AlignmentType.JOINT_REPLACEMENT
+
+    return AlignmentType.OTHER_REPLACEMENT  
+
     
 
 def percent_BY_overlap(s1_offset: float, s1_length: float,
