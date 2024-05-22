@@ -18,7 +18,7 @@ REPLACED_THRESHOLD = 0.25
 
 class SlabRegistration:
     def __init__(self, beginMM: int, endMM: int, 
-                 interstate: str, data_dir: str):
+                 interstate: str, data_dir: str, avg):
         self.minslablength = 100
         self.data_dir = data_dir
         self.possiblyor = 2
@@ -51,7 +51,7 @@ class SlabRegistration:
         print("Running code...")
         self.register()
         self.writer.update_registration_data(self.reg_data)
-        self.build_single_spreadsheet(avg_faulting=True)
+        self.build_single_spreadsheet(avg_faulting=avg)
        
 
         

@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from utils.px_mm_converter import PXMMConverter
 import crop_slab.fault_calc as fc
-import math
+
 class SlabWriter:
     def __init__(self, interstate: str, MM_start: int,
                  MM_end: int, year: int, scaler: PXMMConverter):
@@ -15,6 +15,10 @@ class SlabWriter:
         self.db = self.client['jpcp_deterioration']
         self.slab_collection = self.db['slabs']
         self.raw_subjoint_collection = self.db['raw_subjoint_data']
+        self.slab_collection.create_index({
+            'seg_year_id': pymongo.TEXT,
+            'slab_index': pymongo.ASCENDING
+        })
         self.year = year
         self.MM_start = MM_start
         self.MM_end = MM_end

@@ -60,8 +60,12 @@ There is no input, other than the connection to the database.
 ### Output 
 Registration data will be stored in the database. 
 ### Instructions for Running 
-* Run `python reg_slabs.py -b <beginMM> -e <endMM> -i <interstate>`.
-* Follow the prompts.
+* Run `python reg_slabs.py -b <beginMM> -e <endMM> -i <interstate> -d <directory to store spreadsheet output>` to associate BY and CY slab pairs if you have not done that yet for the segment. When this is done, or if the slab assoctiations have already been stored in the database, then go to the slab classification application and annotate those slabs.
+* After, come back to the slab registration application. Run the same command again. Faulting values can be calculated in two ways:
+  * If you add the `-a` flag, if there are are more than one CY slab for a BY slab, then faulting values will be averaged.
+  * If not, then the faulting value of the largest contributor/overlapper CY slab will be taken.
+  * Regardless of how the faulting value is calculated, the state of the largest contributor CY slab will be recorded.
+* Follow the prompts to set up BY and start slabs. The slab ID input for starting slab refers to the slab images outputted by the slab cropping app. 
 
 
 
