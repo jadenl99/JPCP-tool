@@ -10,7 +10,7 @@ if __name__ == '__main__':
                         metavar='<filepath>',
                         type=str,
                         required=True,
-                        help='Directory where the XML and pictures reside')
+                        help='Directory for all the segment data')
 
     parser.add_argument('--pxheight', 
                         metavar='<height in pixels>',

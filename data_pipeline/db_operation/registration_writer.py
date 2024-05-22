@@ -48,7 +48,7 @@ class RegistrationWriter:
                                             'MM_end': self.endMM})
         if not seg:
             raise ValueError('Segment does not exist in the database')  
-        return seg['_id']
+        return f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}'
     
 
     def create_registration_entry(self):
@@ -81,12 +81,16 @@ class RegistrationWriter:
             {'$set': {'registration_data': registration_data}}
         )
 
-    def get_slab_data(self, year: int, slab_index: int):
+    def get_slab_data(self, year: int, slab_index: int, 
+                      status_only: bool = False):
         """Gets the data for a specific slab
 
         Args:
             year (int): The year the slab is from
             slab_index (int): The index of the slab
+            status_only (bool, optional): If True, only the status 
+            (average faulting/slab states/length) of the slab is returned. 
+            Defaults to False.
 
         Raises:
             ValueError: If no data is found for the specified slab
@@ -94,11 +98,18 @@ class RegistrationWriter:
             dict: The slab data
         """
         seg_year_id = f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}_{year}'
-        print(seg_year_id)
-        result = self.slab_collection.find_one(
-            {'seg_year_id': seg_year_id, 
-             'slab_index': slab_index}
-        )
+        if status_only:
+            result = self.slab_collection.find_one(
+                {'seg_year_id': seg_year_id, 
+                 'slab_index': slab_index},
+                {'_id': 0, 'mean_faulting': 1, 'primary_state': 1, 
+                 'secondary_state': 1, 'special_state': 1, 'length': 1}
+            )
+        else: 
+            result = self.slab_collection.find_one(
+                {'seg_year_id': seg_year_id, 
+                'slab_index': slab_index}
+            )
         if not result:
             raise ValueError(f'No data found for the specified slab '
                              f'{slab_index} in the year {year}')

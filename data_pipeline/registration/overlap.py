@@ -8,6 +8,20 @@ class OverlapType(Enum):
     CURRENT_MAJORITY_OVERLAP = 3
     MINOR_OVERLAP = 4
 
+class AlignmentType(Enum):
+    """Enum to specify the type of replacement done based on the alignment of 
+    CY and BY joints"""
+    PARTIAL_ALIGN = 0
+    JOINT_REPLACEMENT = 1  
+    PARTIAL_INTERIOR = 2
+    PARTIAL_EXTERIOR = 3
+    FULL_TWO_EXTERIOR = 4
+    FULL_ONE_EXTERIOR = 5
+    FULL_TWO_ALIGN = 6
+    PARTIAL_EXTERIOR_MINOR = 7
+
+
+
 def overlap_offset_length(s1_offset: float, s1_length: float,
                           s2_offset: float, s2_length: float):
     """Calculates the overlap given the offset and length of two slabs. This is
@@ -26,7 +40,8 @@ def overlap_offset_length(s1_offset: float, s1_length: float,
 
 
 def belongs_to(s1_offset: float, s1_length: float,
-               s2_offset: float, s2_length: float):
+               s2_offset: float, s2_length: float,
+               threshold: float = 0.5):
     """Determines if the first slab/object belongs to the second slab/object.
     This is a calculation in 1D space.
 
@@ -35,6 +50,8 @@ def belongs_to(s1_offset: float, s1_length: float,
         s1_length (float): The length of the first slab/object (BY)
         s2_offset (float): The offset of the second slab/object (CY)
         s2_length (float): The length of the second slab/object (CY)
+        threshold (float): Percent of overlap to consider as majority overlap.
+        default is 0.5
     Returns:
         OverlapType: The type of overlap between the two slabs/objects
     """
@@ -45,13 +62,83 @@ def belongs_to(s1_offset: float, s1_length: float,
           abs((s1_offset + s1_length) - (s2_offset + s2_length)) < 610):
     # overlap >= s1_length - 1220 and abs(s1_length - s2_length) < 610:
         return OverlapType.FULL_OVERLAP
-    elif overlap >= float(s1_length) / 2:
+    elif overlap >= float(s1_length) * threshold:
         return OverlapType.BASE_MAJORITY_OVERLAP
-    elif overlap >= float(s2_length) / 2:
+    elif overlap >= float(s2_length) * threshold:
         return OverlapType.CURRENT_MAJORITY_OVERLAP
     else:
         return OverlapType.MINOR_OVERLAP
         
 
 
+def replacement_type(interior: int, 
+                     exterior: int, 
+                     aligned: int, 
+                     cy_length: float, 
+                     by_length: float, 
+                     cy_offset: float, 
+                     replacement_threshold: float = 0.25):
+    """Determines the type of replacement done based on the alignemnt of CY and
+    BY joints
 
+    Args:
+        interior (int): number of CY interior joints
+        exterior (int): number of CY exterior joints
+        aligned (int): number of CY aligned joints
+        cy_length (float): length of the last CY slab overlapping the BY slab
+        by_length (float): length of the BY slab
+        cy_offset (float): offset of the last CY slab overlapping the BY slab
+        replacement_threshold (float): threshold to determine if the CY slab
+        replaces the BY slab in the partial exeterior case. Default is 0.25 
+    
+    Returns:
+        AlignmentType: The type of replacement done based on the alignment of CY
+        and BY joints
+    """
+    if aligned == 2 and exterior == 0 and interior == 0:
+        return AlignmentType.FULL_TWO_ALIGN
+    
+    if aligned == 1 and exterior == 1 and interior == 0:
+        return AlignmentType.FULL_ONE_EXTERIOR
+    
+    if aligned == 0 and exterior == 2 and interior == 0:
+        return AlignmentType.FULL_TWO_EXTERIOR
+    
+    if interior >= 2:
+        return AlignmentType.PARTIAL_INTERIOR
+    
+    if aligned == 2 and interior == 1 and exterior == 0:
+        return AlignmentType.PARTIAL_ALIGN
+    
+    # Handling Partial Exterior and Joint Replacement Cases
+    overlap_percentage = percent_BY_overlap(0, by_length, cy_offset, cy_length)
+
+    lower_bound = min(replacement_threshold, 1 - replacement_threshold)
+    upper_bound = max(replacement_threshold, 1 - replacement_threshold)
+    
+    if lower_bound <= overlap_percentage <= upper_bound:    
+        return AlignmentType.PARTIAL_EXTERIOR
+
+    if cy_length <= 2400:
+        return AlignmentType.JOINT_REPLACEMENT
+
+    return AlignmentType.PARTIAL_EXTERIOR_MINOR  
+
+    
+
+def percent_BY_overlap(s1_offset: float, s1_length: float,
+                       s2_offset: float, s2_length: float):
+    """Calculates the percentage of the first slab/object that overlaps with the
+    second slab/object. This is a calculation in 1D space.
+
+    Args:
+        s1_offset (float): The offset of the first slab/object (BY)
+        s1_length (float): The length of the first slab/object (BY)
+        s2_offset (float): The offset of the second slab/object (CY)
+        s2_length (float): The length of the second slab/object (CY)
+    Returns:
+        float: The percentage of the first slab/object that overlaps with the
+        second slab/object
+    """
+    overlap = overlap_offset_length(s1_offset, s1_length, s2_offset, s2_length)
+    return float(overlap) / s1_length
