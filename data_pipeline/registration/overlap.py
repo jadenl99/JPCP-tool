@@ -18,7 +18,7 @@ class AlignmentType(Enum):
     FULL_TWO_EXTERIOR = 4
     FULL_ONE_EXTERIOR = 5
     FULL_TWO_ALIGN = 6
-    OTHER_REPLACEMENT = 7
+    PARTIAL_EXTERIOR_MINOR = 7
 
 
 
@@ -122,7 +122,7 @@ def replacement_type(interior: int,
     if cy_length <= 2400:
         return AlignmentType.JOINT_REPLACEMENT
 
-    return AlignmentType.OTHER_REPLACEMENT  
+    return AlignmentType.PARTIAL_EXTERIOR_MINOR  
 
     
 

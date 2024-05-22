@@ -59,7 +59,7 @@ class SlabRegistration:
         """Carries out registration for each year.
         """
         for year, first_slab in zip(self.years, self.first_slabs):
-            self.align_year(year, first_slab)
+            # self.align_year(year, first_slab)
             if year != self.by: 
                 self.categorize_by_length(year, first_slab)
 

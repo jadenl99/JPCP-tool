@@ -48,7 +48,7 @@ class RegistrationWriter:
                                             'MM_end': self.endMM})
         if not seg:
             raise ValueError('Segment does not exist in the database')  
-        return seg['_id']
+        return f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}'
     
 
     def create_registration_entry(self):
