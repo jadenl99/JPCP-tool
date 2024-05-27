@@ -134,11 +134,6 @@ class SlabRegistration:
         new_BY = True
         max_overlap = -1
         while byi < len(self.by_slabs) and cyi < len(cy_slabs):
-            # WARNINGS
-            # if 1920 <= cyi <= 1927:
-            #     print(f'Interior: {interior}, Exterior: {exterior}, Aligned: {aligned}')
-            #     print(f'BYI: {byi + 3}, Length: {self.by_slabs[byi]["length"]}')
-            #     print(f'CYI: {cyi + 2}, Offset: {cy_rel_offset}, Length: {cy_slabs[cyi]["length"]}')
 
             if byi >= len(self.by_slabs) + 1:
                 raise Exception(f"Stopped when processing slab "

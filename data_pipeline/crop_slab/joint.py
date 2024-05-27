@@ -53,14 +53,6 @@ class HorizontalJoint:
         # no subjoints added yet
         if not self.subjoints:
             return True
-        
-        # # subjoint is directly right of current the rightmost subjoint
-        # if abs(new_subjoint.y1 - self.subjoints[-1].y2) <= 100:
-        #     return True
-        
-        # # subjoint is directly left of the current leftmost subjoint
-        # if abs(new_subjoint.y2 - self.subjoints[0].y1) <= 100:
-        #     return True
 
         y_max = self.get_max_y()
         y_min = self.get_min_y()

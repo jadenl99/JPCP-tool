@@ -81,6 +81,8 @@ class CropFileManager(FileManager):
             self.image_mode = ImageType.INTENSITY
         elif image_mode == 'range':
             self.image_mode = ImageType.RANGE
+        elif image_mode == 'segmentation':
+            self.image_mode = ImageType.SEGMENTATION
         else:
             raise ValueError("Please use a valid image mode")
         self.input_im_path = os.path.join(self.data_path, 

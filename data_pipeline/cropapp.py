@@ -46,11 +46,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--mode',
                         metavar='<cropping mode>',
-                        choices=['range', 'intensity'],
+                        choices=['range', 'intensity', 'segmentation'],
                         nargs='*',
                         type=str,
                         default=['range'],
-                        help='Image layer to process ("range" | "intensity")')
+                        help='Image layer to process ("range" | "intensity | segmentation")')
     
     parser.add_argument('-b', 
                         metavar='<beginning MM>',
@@ -86,7 +86,7 @@ if __name__ == '__main__':
         raise ValueError("Please enter a valid function name.")
 
     
-    if len(mode) > 2:
+    if len(mode) > 3:
         raise ValueError("Mode argument can only have two or less values")
 
 

@@ -265,10 +265,14 @@ class CropSlabsCVAT:
         input_files = self.file_manager.input_im_files
         img = cv2.imread(
             os.path.join(input_path, input_files[bottom_img_index]))
+        if self.file_manager.image_mode == 'segmentation':
+            img = cv2.resize(img, (self.px_width, self.px_height))
         for i in range(bottom_img_index + 1, top_img_index + 1):
             temp_img = cv2.imread(
                 os.path.join(input_path, input_files[i])
                 )
+            if self.file_manager.image_mode == 'segmentation':
+                temp_img = cv2.resize(temp_img, (self.px_width, self.px_height))
             img = cv2.vconcat([temp_img, img])
         return img
 
