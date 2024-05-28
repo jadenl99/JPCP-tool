@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>611</width>
-    <height>415</height>
+    <width>607</width>
+    <height>406</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>587</width>
-        <height>391</height>
+        <width>689</width>
+        <height>361</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -64,6 +64,13 @@
             </property>
             <property name="title">
              <string>Select Years:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="id_select">
+            <property name="title">
+             <string>Select Starting ID</string>
             </property>
            </widget>
           </item>

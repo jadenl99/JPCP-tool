@@ -41,7 +41,6 @@ class ClassificationController(QObject):
             return
         
         
-
         self._app.run_annotation_tool()   
     
     
@@ -51,14 +50,16 @@ class ClassificationController(QObject):
     
 
 class RegistrationController(QObject):
-    def __init__(self, registration_model):
+    def __init__(self, registration_model, app):
         """Constructor for RegistrationController
 
         Args:
             registration_model (RegistrationModel): Model for registration menu
+            app (App): Main application
         """
         super().__init__()
         self._registration_model = registration_model
+        self._app = app
     
 
     def fill_years(self):
@@ -76,10 +77,14 @@ class RegistrationController(QObject):
             checked (bool): Whether the year was checked or unchecked
         """
         if checked:
-            self._registration_model.years_selected.add(int(year))
+            self._registration_model.years_selected[int(year)] = None
         else:
-            self._registration_model.years_selected.remove(int(year))
+            del self._registration_model.years_selected[int(year)]
     
+
+    def update_starting_id(self, year, id):
+        self._registration_model.years_selected[int(year)] = id
+
 
     def update_by_selected(self, by, checked):
         """Update the by selected list when a by is checked or unchecked.
@@ -116,6 +121,15 @@ class RegistrationController(QObject):
             popup.exec_()
             return
         
+        for year, id in self._registration_model.years_selected.items():
+            if id is None or id == '':
+                popup.setText(f'Please enter a starting ID for {year}.')
+                popup.exec_()
+                return
+        
+        print(self._registration_model.years_selected)
+        print(self._registration_model.by_selected)
+        print(self._registration_model.faulting_mode)
         
         self._app.run_registration_script()
     

@@ -2,8 +2,8 @@ import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QAction, 
                              QMenu, QFileDialog, QPushButton, QWidget, QLabel,
                              QWidget, QComboBox, QCheckBox, QRadioButton,
-                             QButtonGroup, QAbstractButton)
-from PyQt5.QtGui import QPalette, QColor
+                             QButtonGroup, QAbstractButton, QLineEdit)
+from PyQt5.QtGui import QPalette, QColor, QIntValidator
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.uic import loadUi
@@ -62,6 +62,7 @@ class RegistrationMenu(QWidget):
         super().__init__()
         self._registration_controller = registration_controller
         self._registration_model = registration_model
+        self.id_text_edits = {}
         loadUi('resources/registration_menu.ui', self)
         self.setWindowTitle('Registration Menu')
         self.year_btn_group = QButtonGroup()
@@ -73,7 +74,7 @@ class RegistrationMenu(QWidget):
         self.faulting_btn_group.addButton(self.most_btn, 2) 
         self.by_select.setLayout(QVBoxLayout())   
         self.year_select.setLayout(QVBoxLayout())
-    
+        self.id_select.setLayout(QVBoxLayout()) 
         
         self._registration_model.years_changed.connect(
             self.populate_years_selector    
@@ -97,14 +98,23 @@ class RegistrationMenu(QWidget):
         """
         year_select_layout = self.year_select.layout()
         by_select_layout = self.by_select.layout()
+        id_select_layout = self.id_select.layout()
+        self._id_text_edits = {}    
         for i, year in enumerate(years):
             year_checkbox = QCheckBox(str(year))
             year_radio_btn = QRadioButton(str(year))
+            id_text_edit = QLineEdit()
+            id_text_edit.setEnabled(False)
+            id_text_edit.setPlaceholderText('Start ID')
+            id_text_edit.setValidator(QIntValidator())
+            id_text_edit.editingFinished.connect(self.on_id_text_edited)
             year_radio_btn.setEnabled(False)
 
             year_select_layout.addWidget(year_checkbox)
+            id_select_layout.addWidget(id_text_edit)
             by_select_layout.addWidget(year_radio_btn)
             self.year_btn_group.addButton(year_checkbox, i + 1)
+            self.id_text_edits[i + 1] = {'year': year, 'text_edit': id_text_edit}
             self.by_btn_group.addButton(year_radio_btn, i + 1)
     
 
@@ -121,12 +131,15 @@ class RegistrationMenu(QWidget):
 
         if btn.isChecked():
             by_btn.setEnabled(True)
+            self.id_text_edits[btn_id]['text_edit'].setEnabled(True)
         
         else:
             if by_btn.isChecked():
                 self._registration_controller.update_by_selected(
                     by_btn.text(), False
                     )
+            self.id_text_edits[btn_id]['text_edit'].setEnabled(False)
+            self.id_text_edits[btn_id]['text_edit'].clear()
             by_btn.setChecked(False)
             by_btn.setEnabled(False)
             
@@ -154,8 +167,17 @@ class RegistrationMenu(QWidget):
         )
 
 
-    
-
+    def on_id_text_edited(self):
+        """Update the starting ID for a particular year
+        """
+        text_edit = self.sender()   
+        for data in self.id_text_edits.values():
+            if data['text_edit'] == text_edit:
+                self._registration_controller.update_starting_id(
+                    data['year'], text_edit.text()
+                )
+                break
+        
         
 
 

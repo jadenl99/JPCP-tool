@@ -82,7 +82,7 @@ class RegistrationModel(QObject):
         self._slab_inventory = slab_inventory
         self._menu_model = menu_model
         self._years = [] 
-        self._years_selected = set()
+        self._years_selected = {}
         self._by_selected = None
         self._faulting_mode = 'average'
 

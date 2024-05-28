@@ -31,7 +31,7 @@ class App(QApplication):
             self.slab_inventory, self.menu_model
             )
         self.registration_controller = RegistrationController(
-            self.registration_model
+            self.registration_model, self
             )
         self.registration_view = RegistrationMenu(
             self.registration_controller, self.registration_model
@@ -44,6 +44,8 @@ class App(QApplication):
 
     def run_registration_script(self):
         pass
+
+    
     def run_annotation_tool(self):
         """Runs the annotation tool window after the user submits the main menu
         form. The main menu window is closed and the annotation tool window is
