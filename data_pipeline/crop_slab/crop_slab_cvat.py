@@ -223,6 +223,9 @@ class CropSlabsCVAT:
             )
         for x in range(width):
             y = bottom_func.get_y(x_abs_min + x) - y_abs_min
+            # buffer to erase falsely detected cracks from joints
+            if self.file_manager.image_mode.value == 'segmentation':
+                y -= 20
             # account for edge calculations that may be slightly off
             if y < 0:
                 y = 0
@@ -241,6 +244,8 @@ class CropSlabsCVAT:
             )
         for x in range(width):
             y = top_func.get_y(x_abs_min + x) - y_abs_min
+            if self.file_manager.image_mode.value == 'segmentation':
+                y += 20
             # account for edge calculations that may be slightly off
             if y < 0:
                 y = 0
@@ -265,13 +270,13 @@ class CropSlabsCVAT:
         input_files = self.file_manager.input_im_files
         img = cv2.imread(
             os.path.join(input_path, input_files[bottom_img_index]))
-        if self.file_manager.image_mode == 'segmentation':
+        if self.file_manager.image_mode.value == 'segmentation':
             img = cv2.resize(img, (self.px_width, self.px_height))
         for i in range(bottom_img_index + 1, top_img_index + 1):
             temp_img = cv2.imread(
                 os.path.join(input_path, input_files[i])
                 )
-            if self.file_manager.image_mode == 'segmentation':
+            if self.file_manager.image_mode.value == 'segmentation':
                 temp_img = cv2.resize(temp_img, (self.px_width, self.px_height))
             img = cv2.vconcat([temp_img, img])
         return img

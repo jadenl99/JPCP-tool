@@ -29,7 +29,7 @@ class ClassificationModel(QObject):
             seg_id (str): segment ID
         """
         registrations = {}
-        reg_metadata = self._slab_inventory.all_registration_metadata(
+        reg_metadata = self._slab_inventory.all_registration_data(
             filter={"segment_id": self._menu_model.segment_id}
         )
         for reg in reg_metadata:

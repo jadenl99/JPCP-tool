@@ -45,7 +45,7 @@ class App(QApplication):
     def run_registration_script(self):
         pass
 
-    
+
     def run_annotation_tool(self):
         """Runs the annotation tool window after the user submits the main menu
         form. The main menu window is closed and the annotation tool window is
@@ -56,14 +56,14 @@ class App(QApplication):
             self.classification_model.registration
             ]
         dir = self.menu_model.directory
-        self.slab_inventory.set_segment(reg_data['_id'])
+        #self.slab_inventory.set_segment(reg_data['_id'])
         self.year_panels = {}
         self.year_controllers = {}
         self.year_models = {}
 
         # Each year to annotate has its own MVC components
         for year in reg_data['years']:
-            year_model = YearPanelModel(year, self.slab_inventory)
+            year_model = YearPanelModel(year, self.slab_inventory, reg_data['segment_id'])
             year_controller = YearPanelController(year_model)
             year_view = YearPanel(year_controller, year_model)
             self.year_models[year] = year_model
@@ -72,8 +72,8 @@ class App(QApplication):
 
         # set up the clasification widgets
     
-        self.tool_model = ToolModel(self.year_models, reg_data['base_year'],
-                                    self.slab_inventory, dir)
+        self.tool_model = ToolModel(self.year_models, self.slab_inventory, 
+                                    dir, reg_data)
         self.tool_controller = ToolController(self.tool_model,
                                               self.year_controllers)  
         self.annotation_tool = AnnotationTool(self.tool_controller, 

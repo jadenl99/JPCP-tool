@@ -56,10 +56,11 @@ class ToolController(QObject):
         """
         img_type = self._tool_model.image_type.value
         reg_data = self._tool_model.reg_data
+        seg_str = self._tool_model.seg_str  
         first_BY_index = self._tool_model.first_BY_index    
         for year, panel_model in self._tool_model.year_panel_models.items():
             if panel_model.panel_updated:
-                panel_model.push_updates_to_db()
+                panel_model.push_updates_to_db(seg_str)
                 panel_model.panel_updated = False
 
             # fetch slab state information for CY slabs

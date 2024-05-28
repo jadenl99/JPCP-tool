@@ -39,7 +39,7 @@ class SlabStateSignal(QObject):
 
 class YearPanelModel(QObject):
     
-    def __init__(self, year, slab_inventory):
+    def __init__(self, year, slab_inventory, seg_str):
         """Constructor for YearPanelModel, containing all data for a speicific
         image in a given year to display in a YearPanel.
 
@@ -47,6 +47,7 @@ class YearPanelModel(QObject):
             year (int): year the model is responsible
             slab_inventory (SlabInventory): database containing all the slab 
             data
+            seg_str (str): segment string identifying the segment
         """
         super().__init__()
         self.image_signal = ImageSignal()
@@ -66,6 +67,7 @@ class YearPanelModel(QObject):
         self._secondary_states = None
         self._special_states = None
         self._slabs_info = None
+        self._seg_str = seg_str
 
 
     @property
@@ -184,7 +186,8 @@ class YearPanelModel(QObject):
             slab_id (int): slab ID to switch to
         """
         for slab_id in self._slab_id_list:
-            slab_data = self._slab_inventory.fetch_slab(self._year, slab_id)
+            slab_data = self._slab_inventory.fetch_slab(self._year, slab_id,
+                                                        self._seg_str)
             self._primary_states.append(slab_data['primary_state'])
             self._secondary_states.append(slab_data['secondary_state'])
             self._special_states.append(slab_data['special_state'])
@@ -225,8 +228,11 @@ class YearPanelModel(QObject):
             self.next_btn_enable_signal.next_btn_enable.emit(False)
         
 
-    def push_updates_to_db(self):
+    def push_updates_to_db(self, seg_str):
         """Sends a request to the database to update a certain slab. 
+
+        Args:
+            seg_str (str): segment string identifying the segment
         """
         if self._panel_updated and not self._lock_panel:
             for i in range(len(self._slab_id_list)):
@@ -236,8 +242,10 @@ class YearPanelModel(QObject):
                         'primary_state': self._primary_states[i],
                         'secondary_state': self._secondary_states[i],
                         'special_state': self._special_states[i]
-                    }
+                    },
+                    seg_str
                 )
+
                 
             
            

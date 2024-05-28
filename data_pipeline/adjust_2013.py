@@ -159,7 +159,7 @@ dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output
 for filename in dir_list:
     number = int(filename.split('.')[0])
     if number >= 1536:
-        os.rename(dir + filename, dir + str(number + 4) + '.jpg')
+        os.rename(dir + filename, dir + str(number + 4) + '.jpg')                   
 
 
 print("Successfully updated the database.")
