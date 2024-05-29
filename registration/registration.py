@@ -5,7 +5,7 @@ from tqdm import tqdm
 from os.path import exists
 from registration import overlap
 from registration.overlap import OverlapType, AlignmentType
-
+from PyQt5.QtCore import QObject, pyqtSignal
 
 MEMBERSHIP_THRESHOLD = 0.5
 
@@ -15,9 +15,17 @@ JOINT_THRESHOLD = 400
 # Percentage of BY slab length that must be replaced to count as an R slab
 REPLACED_THRESHOLD = 0.25
 
-class SlabRegistration:
+
+
+        
+class SlabRegistration(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    progress_max = pyqtSignal(int)
+    reset_progress = pyqtSignal()   
     def __init__(self, slab_inventory, seg_str: str, data_dir: str, mode: str,
                  by: int, years: list, first_slabs: list):
+        super().__init__()
         self.slab_inventory = slab_inventory
         
         self.minslablength = 100
@@ -50,12 +58,8 @@ class SlabRegistration:
                                for x in self.by_slabs]
         
         
-    def register(self, progress_bar=None):
+    def run(self):
         """Carries out registration for each year.
-
-        Args:
-            progress_bar (QProgressBar, optional): Progress bar to update. 
-            Defaults to None.
         """
         self.slab_inventory.create_registration_entry(self.seg_str, self.by, 
                                                       self.years)
@@ -68,10 +72,10 @@ class SlabRegistration:
                                                      self.by, 
                                                      self.years)
         if self.mode == 'single':
-            self.build_single_spreadsheet(progress_bar=progress_bar)
+            self.build_single_spreadsheet()
         else:
-            self.build_single_spreadsheet(progress_bar=progress_bar, 
-                                          avg_faulting=True)
+            self.build_single_spreadsheet(avg_faulting=True)
+        self.finished.emit()
 
 
 
@@ -242,8 +246,7 @@ class SlabRegistration:
                 cyi += 1
     
 
-    def build_single_spreadsheet(self, progress_bar=None, 
-                                 avg_faulting=False):
+    def build_single_spreadsheet(self, avg_faulting=False):
         """Builds a single spreadsheet with all the registration data. The 
         single associating slab in the CY is the one that has the most overlap
         with the BY slab. If the avg_faulting flag is set to True, then all 
@@ -252,15 +255,13 @@ class SlabRegistration:
         overlap.
 
         Args:
-            progress_bar (QProgressBar, optional): Progress bar to update.
             avg_faulting (bool, optional): If True, the average faulting of the
             CY slabs will be calculated. Defaults to False.
         """
-        if progress_bar:
-            progress_bar.setVisible(True)   
-            progress_bar.setMinimum(0)
-            progress_bar.setMaximum(len(self.reg_data))
-            progress_bar.setValue(0)
+  
+        self.reset_progress.emit()
+        self.progress_max.emit(len(self.reg_data))  
+            
         metadata = self.seg_str.split('_')
         interstate = metadata[0]
         beginMM = int(metadata[1][2:])
@@ -308,8 +309,7 @@ class SlabRegistration:
                                     else -round(yr_slab['length'] / 1609000, 5))
                         row_dict['MP_to'] = curr_MP
                 writer.writerow(row_dict)
-                if progress_bar:
-                    progress_bar.setValue(i + 1)
+                self.progress.emit(i + 1)
         
 
     def avg_faulting_BY(self, byi, year):
@@ -335,6 +335,7 @@ class SlabRegistration:
         if total == 0:
             return None
         return total / count
+
 
                     
 

@@ -48,12 +48,8 @@ class ClassificationMenu(QWidget):
         for reg in reg_list:
             self.reg_selector.addItem(reg)
     
-class ProgressThread(QThread):
-    count_changed = pyqtSignal(int)
-    def set_count(self, count):
-        self.count_changed.emit(count)
 
-        
+
 class RegistrationMenu(QWidget):
     def __init__(self, registration_controller, registration_model):
         """Constructor for RegistrationMenu
@@ -97,7 +93,9 @@ class RegistrationMenu(QWidget):
 
 
 
-    
+
+
+
     @pyqtSlot(list)
     def populate_years_selector(self, years):
         """Populates the year selector with the years from the database.
@@ -183,7 +181,12 @@ class RegistrationMenu(QWidget):
                     data['year'], text_edit.text()
                 )
                 break
-        
+    
+    @pyqtSlot()
+    def update_progress(self, value):
+        """Update the progress bar
+        """
+        self.reg_progress.setValue(value)
         
 
 

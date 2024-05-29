@@ -1,5 +1,6 @@
 import sys 
 from PyQt5.QtWidgets import QApplication    
+from PyQt5.QtCore import QThread
 from views.menu import MainMenu
 from model.menu_model import MenuModel
 from model.tool_model import ToolModel
@@ -43,14 +44,17 @@ class App(QApplication):
         self.menu.show()
 
 
-    def run_registration_script(self, progress_bar=None):
+    def run_registration_script(self):
         """Runs script to register slabs and output spreadsheet of slab data.
 
         """
         sorted_years = dict(sorted(self.registration_model.years_selected.items()))
         years_selected = list(sorted_years.keys())
         start_bys = list(sorted_years.values()) 
-        slab_registration = SlabRegistration(
+        progress_bar = self.registration_view.reg_progress
+        submit_btn = self.registration_view.submit_btn
+        submit_btn.setEnabled(False)
+        self.reg_worker = SlabRegistration(
             self.slab_inventory, 
             self.menu_model.segment_id,
             self.menu_model.directory,
@@ -59,9 +63,25 @@ class App(QApplication):
             years_selected,
             start_bys
             )
-        slab_registration.register(self.registration_view.reg_progress)
-       
+        
+        # move the registration script to a separate thread so GUI remains
+        # responsive
+        self.reg_thread = QThread()
+        self.reg_worker.moveToThread(self.reg_thread)
 
+        self.reg_thread.started.connect(self.reg_worker.run)
+        self.reg_worker.progress.connect(progress_bar.setValue)
+        self.reg_worker.progress_max.connect(progress_bar.setMaximum)
+        self.reg_worker.reset_progress.connect(lambda: progress_bar.setValue(0))
+        self.reg_worker.reset_progress.connect(lambda: progress_bar.setVisible(True))
+        self.reg_worker.finished.connect(self.reg_thread.quit)
+        self.reg_worker.finished.connect(self.reg_worker.deleteLater)
+        self.reg_worker.finished.connect(lambda: progress_bar.setVisible(False))    
+        self.reg_worker.finished.connect(lambda: submit_btn.setEnabled(True))
+        self.reg_thread.finished.connect(self.reg_thread.deleteLater)
+        # start execution of thread
+        self.reg_thread.start()
+        
 
     def run_annotation_tool(self):
         """Runs the annotation tool window after the user submits the main menu
