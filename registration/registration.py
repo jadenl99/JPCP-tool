@@ -3,7 +3,6 @@ import sys, os
 import csv
 from tqdm import tqdm
 from os.path import exists
-from db_operation.registration_writer import RegistrationWriter
 from registration import overlap
 from registration.overlap import OverlapType, AlignmentType
 
@@ -17,23 +16,24 @@ JOINT_THRESHOLD = 400
 REPLACED_THRESHOLD = 0.25
 
 class SlabRegistration:
-    def __init__(self, beginMM: int, endMM: int, 
-                 interstate: str, data_dir: str, avg):
+    def __init__(self, slab_inventory, seg_str: str, data_dir: str, mode: str,
+                 by: int, years: list, first_slabs: list):
+        self.slab_inventory = slab_inventory
+        
         self.minslablength = 100
         self.data_dir = data_dir
         self.possiblyor = 2
-        self.interstate = interstate
-        self.beginMM = beginMM
-        self.endMM = endMM  
+        self.seg_str = seg_str
         self.interval = 1220 # 1220 mm = 4 feet
         self.endbuffer = 610 # 610 mm = 2 feet  
-        self.years = None
-        self.first_slabs = None
-        self.by = None
+        self.years = years
+        self.first_slabs = first_slabs
+        self.by = by
+        self.mode = mode
         self.prompt_input()
         by_start_slab = self.first_slabs[self.years.index(self.by)]
-        self.writer = RegistrationWriter(beginMM, endMM, interstate, self.by, self.years)
-        self.by_slabs = list(self.writer.get_year_slab_data(self.by, by_start_slab))
+        self.by_slabs = list(self.slab_inventory.get_year_slab_data(seg_str,
+            self.by, by_start_slab))
         self.reg_data = [
             {
                 "base_id": x['slab_index'], 
@@ -48,20 +48,30 @@ class SlabRegistration:
             ]
         self.majority_slabs = [{str(self.by): x['slab_index']} 
                                for x in self.by_slabs]
-        print("Running code...")
-        self.register()
-        self.writer.update_registration_data(self.reg_data)
-        self.build_single_spreadsheet(avg_faulting=avg)
-       
-
         
-    def register(self):
+        
+    def register(self, progress_bar=None):
         """Carries out registration for each year.
+
+        Args:
+            progress_bar (QProgressBar, optional): Progress bar to update. 
+            Defaults to None.
         """
+        self.slab_inventory.create_registration_entry(self.seg_str, self.by, 
+                                                      self.years)
         for year, first_slab in zip(self.years, self.first_slabs):
             # self.align_year(year, first_slab)
             if year != self.by: 
                 self.categorize_by_length(year, first_slab)
+        self.slab_inventory.update_registration_data(self.reg_data, 
+                                                     self.seg_str, 
+                                                     self.by, 
+                                                     self.years)
+        if self.mode == 'single':
+            self.build_single_spreadsheet(progress_bar=progress_bar)
+        else:
+            self.build_single_spreadsheet(progress_bar=progress_bar, 
+                                          avg_faulting=True)
 
 
 
@@ -97,18 +107,19 @@ class SlabRegistration:
                 None
 
 
-    def align_year(self, year: int, first_slab: int):
-        """Aligns the starting point of the slabs in a year to the starting slab
-        specified.
+    # def align_year(self, year: int, first_slab: int):
+    #     """Aligns the starting point of the slabs in a year to the starting slab
+    #     specified.
 
-        Args:
-            year (int): year to align
-            first_slab (int): first slab index, its offset will be set to 0 and 
-            all other slabs in the year will be adjusted accordingly
-        """
-        slab_data = self.writer.get_slab_data(year, first_slab)
-        shift = -(slab_data['y_offset'])
-        self.writer.update_offsets(year, shift)
+    #     Args:
+    #         year (int): year to align
+    #         first_slab (int): first slab index, its offset will be set to 0 and 
+    #         all other slabs in the year will be adjusted accordingly
+    #     """
+    #     slab_data = self.slab_inventory.get_slab_data(
+    #         year, first_slab, self.seg_str)
+    #     shift = -(slab_data['y_offset'])
+    #     self.writer.update_offsets(year, shift)
 
 
     def categorize_by_length(self, year: int, first_slab: int): 
@@ -123,7 +134,8 @@ class SlabRegistration:
             first_slab (int): first slab index of the year
         """
         # list of current slabs
-        cy_slabs = list(self.writer.get_year_slab_data(year, first_slab))
+        cy_slabs = list(self.slab_inventory.get_year_slab_data(
+            self.seg_str, year, first_slab))
         self.reg_data[0][str(year)] = []   
         cy_entries = self.reg_data[0][str(year)]
         # indices for the BY and CY slabs
@@ -230,7 +242,8 @@ class SlabRegistration:
                 cyi += 1
     
 
-    def build_single_spreadsheet(self, avg_faulting: bool = False):
+    def build_single_spreadsheet(self, progress_bar=None, 
+                                 avg_faulting=False):
         """Builds a single spreadsheet with all the registration data. The 
         single associating slab in the CY is the one that has the most overlap
         with the BY slab. If the avg_faulting flag is set to True, then all 
@@ -239,11 +252,20 @@ class SlabRegistration:
         overlap.
 
         Args:
+            progress_bar (QProgressBar, optional): Progress bar to update.
             avg_faulting (bool, optional): If True, the average faulting of the
             CY slabs will be calculated. Defaults to False.
         """
-        csv_name = (f'{self.interstate}_MM{self.beginMM}_MM{self.endMM}_'
-                    f'{self.years[0]}_{self.years[-1]}_single.csv')
+        if progress_bar:
+            progress_bar.setVisible(True)   
+            progress_bar.setMinimum(0)
+            progress_bar.setMaximum(len(self.reg_data))
+            progress_bar.setValue(0)
+        metadata = self.seg_str.split('_')
+        interstate = metadata[0]
+        beginMM = int(metadata[1][2:])
+        csv_name = (
+            f'{self.seg_str}_{self.years[0]}_{self.years[-1]}_single.csv')
         spread_path = os.path.join(self.data_dir, csv_name)
         with open(spread_path, "w", newline="") as csv_file:
             fields = ['interstate', 'direction', 'MP_from', 'MP_to', 'BY_id',
@@ -253,12 +275,12 @@ class SlabRegistration:
             for year in self.years:
                 fields.append(f'{year}_faulting')
             
-            curr_MP = self.beginMM
+            curr_MP = beginMM
             fields.extend(['year_replaced', 'replaced_type'])
             writer = csv.DictWriter(csv_file, fieldnames=fields)    
             writer.writeheader()
-            i_name = self.interstate[0:-2]
-            direction = self.interstate[-2:].upper()
+            i_name = interstate[0:-2]
+            direction = interstate[-2:].upper()
             for i, entry in tqdm(enumerate(self.reg_data), 
                                  total=len(self.reg_data)):
                 row_dict = {'interstate': i_name, 
@@ -269,8 +291,8 @@ class SlabRegistration:
                     yr_slab = None
                     if str(year) in self.majority_slabs[i]:
                         yr_id = self.majority_slabs[i][str(year)]
-                        yr_slab = self.writer.get_slab_data(year, yr_id, 
-                                                            status_only=True)
+                        yr_slab = self.slab_inventory.fetch_slab(
+                            year, yr_id, self.seg_str)
                         row_dict[f'{year}_state'] = yr_slab['primary_state']
                         row_dict[f'{year}_faulting'] = (
                             self.avg_faulting_BY(i, year) if avg_faulting
@@ -286,6 +308,8 @@ class SlabRegistration:
                                     else -round(yr_slab['length'] / 1609000, 5))
                         row_dict['MP_to'] = curr_MP
                 writer.writerow(row_dict)
+                if progress_bar:
+                    progress_bar.setValue(i + 1)
         
 
     def avg_faulting_BY(self, byi, year):
@@ -303,7 +327,7 @@ class SlabRegistration:
         count = 0
         cy_slab_ids = self.reg_data[byi][str(year)]
         for cy_id in cy_slab_ids:
-            slab = self.writer.get_slab_data(year, cy_id, status_only=True)
+            slab = self.slab_inventory.fetch_slab(year, cy_id, self.seg_str)
             if slab['mean_faulting']:
                 total += slab['mean_faulting']
                 count += 1

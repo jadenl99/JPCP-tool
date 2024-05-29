@@ -105,7 +105,7 @@ class RegistrationController(QObject):
             self._registration_model.faulting_mode = 'average'
         else:
             self._registration_model.faulting_mode = 'single'
-    
+
 
     @pyqtSlot(bool)
     def submit(self, b):
@@ -127,9 +127,6 @@ class RegistrationController(QObject):
                 popup.exec_()
                 return
         
-        print(self._registration_model.years_selected)
-        print(self._registration_model.by_selected)
-        print(self._registration_model.faulting_mode)
         
         self._app.run_registration_script()
     

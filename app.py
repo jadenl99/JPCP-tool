@@ -13,6 +13,7 @@ from views.annotation_tool import AnnotationTool
 from views.year_panel import YearPanel
 from views.menu_widgets import ClassificationMenu, RegistrationMenu
 from database.db import SlabInventory
+from registration.registration import SlabRegistration
 class App(QApplication):
     def __init__(self, sys_argv):
         super().__init__(sys_argv)
@@ -42,8 +43,24 @@ class App(QApplication):
         self.menu.show()
 
 
-    def run_registration_script(self):
-        pass
+    def run_registration_script(self, progress_bar=None):
+        """Runs script to register slabs and output spreadsheet of slab data.
+
+        """
+        sorted_years = dict(sorted(self.registration_model.years_selected.items()))
+        years_selected = list(sorted_years.keys())
+        start_bys = list(sorted_years.values()) 
+        slab_registration = SlabRegistration(
+            self.slab_inventory, 
+            self.menu_model.segment_id,
+            self.menu_model.directory,
+            self.registration_model.faulting_mode,
+            self.registration_model.by_selected,
+            years_selected,
+            start_bys
+            )
+        slab_registration.register(self.registration_view.reg_progress)
+       
 
 
     def run_annotation_tool(self):
@@ -56,7 +73,6 @@ class App(QApplication):
             self.classification_model.registration
             ]
         dir = self.menu_model.directory
-        #self.slab_inventory.set_segment(reg_data['_id'])
         self.year_panels = {}
         self.year_controllers = {}
         self.year_models = {}

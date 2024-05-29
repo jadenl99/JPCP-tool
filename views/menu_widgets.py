@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QAction,
                              QButtonGroup, QAbstractButton, QLineEdit)
 from PyQt5.QtGui import QPalette, QColor, QIntValidator
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from PyQt5.uic import loadUi
 
 
@@ -48,7 +48,12 @@ class ClassificationMenu(QWidget):
         for reg in reg_list:
             self.reg_selector.addItem(reg)
     
+class ProgressThread(QThread):
+    count_changed = pyqtSignal(int)
+    def set_count(self, count):
+        self.count_changed.emit(count)
 
+        
 class RegistrationMenu(QWidget):
     def __init__(self, registration_controller, registration_model):
         """Constructor for RegistrationMenu
@@ -65,6 +70,7 @@ class RegistrationMenu(QWidget):
         self.id_text_edits = {}
         loadUi('resources/registration_menu.ui', self)
         self.setWindowTitle('Registration Menu')
+        self.reg_progress.setVisible(False)
         self.year_btn_group = QButtonGroup()
         self.year_btn_group.setExclusive(False)
         self.by_btn_group = QButtonGroup()

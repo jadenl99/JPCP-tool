@@ -116,7 +116,7 @@ class SlabWriter:
         z3_vals = fc.find_subjoints_in_range(filtered_faulting_data, z3[0], z3[1])
         z4_vals = fc.find_subjoints_in_range(filtered_faulting_data, z4[0], z4[1])
         z5_vals = fc.find_subjoints_in_range(filtered_faulting_data, z5[0], z5[1])
-        
+       
         
         z1_vals = np.abs(z1_vals)
         z2_vals = np.abs(z2_vals)

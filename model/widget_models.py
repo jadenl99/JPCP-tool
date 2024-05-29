@@ -132,6 +132,16 @@ class RegistrationModel(QObject):
     @by_selected.setter
     def by_selected(self, by_selected):
         self._by_selected = by_selected
+    
+
+    @property
+    def faulting_mode(self):
+        return self._faulting_mode
+    
+
+    @faulting_mode.setter
+    def faulting_mode(self, faulting_mode):
+        self._faulting_mode = faulting_mode
         
 
     
