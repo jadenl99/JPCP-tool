@@ -204,10 +204,6 @@ class SlabRegistration(QObject):
             else:
                 aligned += 1
 
-            # if 1920 <= cyi <= 1927:
-            #     print(f'Interior: {interior}, Exterior: {exterior}, Aligned: {aligned}\n')
-
-            # BY slab ends at or before the CY slab
             if by_length < cy_length + cy_rel_offset + JOINT_THRESHOLD:
                 new_BY = True
                 existing_rep_year = self.reg_data[byi]['replaced']  
@@ -215,7 +211,12 @@ class SlabRegistration(QObject):
                                                     cy_length, by_length, 
                                                     cy_rel_offset, 
                                                     REPLACED_THRESHOLD)
-                
+                if existing_rep_year:
+                    # mark slab as R
+                    for index in cy_entries:
+                        self.slab_inventory.add_slab_update_request(
+                            year, index, {'special_state': 'R'}, self.seg_str
+                        )
                 if (not existing_rep_year and 
                     rep_type != AlignmentType.FULL_TWO_ALIGN):
 
@@ -226,6 +227,11 @@ class SlabRegistration(QObject):
 
                     if rep_type != AlignmentType.JOINT_REPLACEMENT:
                         self.reg_data[byi]['replaced'] = year
+                        # mark slab as R
+                        for index in cy_entries:
+                            self.slab_inventory.add_slab_update_request(
+                                year, index, {'special_state': 'R'}, self.seg_str
+                            )
                 interior = exterior = aligned = 0
                 max_overlap = -1
                 byi += 1
@@ -244,9 +250,11 @@ class SlabRegistration(QObject):
             else:
                 cy_rel_offset += cy_length
                 cyi += 1
+        self.slab_inventory.execute_requests()
     
 
-    def build_single_spreadsheet(self, avg_faulting=False):
+    def build_single_spreadsheet(self, avg_faulting=False, 
+                                 include_replaced=True):
         """Builds a single spreadsheet with all the registration data. The 
         single associating slab in the CY is the one that has the most overlap
         with the BY slab. If the avg_faulting flag is set to True, then all 
@@ -294,7 +302,9 @@ class SlabRegistration(QObject):
                         yr_id = self.majority_slabs[i][str(year)]
                         yr_slab = self.slab_inventory.fetch_slab(
                             year, yr_id, self.seg_str)
-                        row_dict[f'{year}_state'] = yr_slab['primary_state']
+                        row_dict[f'{year}_state'] = yr_slab['primary_state'] if (
+                            yr_slab['special_state'] != 'R' or not include_replaced) else (
+                            yr_slab['special_state'])
                         row_dict[f'{year}_faulting'] = (
                             self.avg_faulting_BY(i, year) if avg_faulting
                             else yr_slab['mean_faulting']
