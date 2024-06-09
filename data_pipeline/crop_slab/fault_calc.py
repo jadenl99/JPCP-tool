@@ -344,6 +344,42 @@ def find_subjoints_in_range_filtered(fault_vals: list[dict[float, float]],
         filtered_entries = list(nn_interpolate(filtered_entries))
         return [{'x_val': x_vals[i], 'data': filtered_entries[i]} for 
                 i in range(len(filtered_entries))]
+
+
+def find_subjoints_in_range_dict(fault_vals: list[dict[float, float]], 
+                        x_min: float, 
+                        x_max: float):
+    """Finds all subjoint data within the x-ranges
+
+    Args:
+        fault_vals (list[dict[float, float]]): list of faulting values with
+        each dictionary containing the x-value and the faulting value
+        x_min (float): min y-value, expressed in absolute mm
+        x_max (float): max y-value, expressed in absolute mm
+
+    Returns:
+        list[dict[float, float]]: list of faulting values and their
+        corresponding x-values.
+
+
+    Raises:
+        ValueError: if x_min is greater than x_max
+        ValueError: if faulting values are not in the correct format
+    """
+    if x_min > x_max:
+            raise ValueError('x_min cannot be greater than x_max')
+    entries = [entry['data'] for entry in fault_vals 
+                if x_min <= entry['x_val'] <= x_max]
+    x_vals = [entry['x_val'] for entry in fault_vals
+                if x_min <= entry['x_val'] <= x_max]
+    try:
+        entries = np.array(entries, dtype=float)
+    except:
+        raise ValueError('Faulting values are not in the correct format.')
+    
+    
+    return [{'x_val': x_vals[i], 'data': entries[i]} for 
+            i in range(len(entries))]
     
 
 

@@ -1,0 +1,7 @@
+default:
+  # The width calculation algo continues if the current pixel's intensity > this threshold
+  width_intensity_threshold:
+    segmentation: 128
+    range: 175 # 80 before the range image is inversed
+
+  max_width_expand: 20

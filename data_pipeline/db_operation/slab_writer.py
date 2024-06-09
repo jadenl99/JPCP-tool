@@ -91,6 +91,9 @@ class SlabWriter:
         faulting_vals = fc.find_subjoints_in_range(faulting_data, 
                                                    x_min_mm, 
                                                    x_max_mm)
+        faulting_vals_dict = fc.find_subjoints_in_range_dict(faulting_data,
+                                                             x_min_mm,
+                                                             x_max_mm)
         stats = fc.calc_all_stats(faulting_vals)
         mean_faulting = stats['mean']
         stdev_faulting = stats['stdev']
@@ -140,6 +143,7 @@ class SlabWriter:
             z4_median = round(z4_median, 4)
         if z5_median:
             z5_median = round(z5_median, 4)
+        crack_length = None
 
         num_faulting_entries = len(faulting_vals)
         filtered_faulting_vals = fc.mask_outliers(faulting_vals)
@@ -161,8 +165,8 @@ class SlabWriter:
             'num_faulting_vals': num_faulting_entries,
             'num_invalid': num_invalid,
             'num_outliers': num_outliers,
-            'faulting_vals': faulting_vals.tolist(),
-            'filtered_faulting_vals': filtered_faulting_vals.tolist(),
+            'faulting_vals': faulting_vals_dict,
+            'filtered_faulting_vals': filtered_faulting_data,
             'mean_faulting': mean_faulting,
             'stdev_faulting': stdev_faulting,
             'median_faulting': median_faulting,
@@ -173,6 +177,7 @@ class SlabWriter:
             'z3_median': z3_median,
             'z4_median': z4_median,
             'z5_median': z5_median,
+            'crack_length': crack_length,
             'primary_state': None,
             'secondary_state': None,
             'special_state': None
@@ -244,6 +249,17 @@ class SlabWriter:
         return faulting_entries
         
     
+    def add_crack_stats(self, slab_index, crack_length):
+        """Adds crack stats to the slab entry
+
+        Args:
+            slab_index (int): index of the slab
+            crack_length (float): length of the crack
+        """
+        self.slab_collection.update_one(
+            {'seg_year_id': self.seg_year_id, 'slab_index': slab_index},
+            {'$set': {'crack_length': crack_length}}
+        )
     
             
     

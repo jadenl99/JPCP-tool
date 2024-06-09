@@ -18,6 +18,7 @@ from db_operation.slab_writer import SlabWriter
 from file_manager.crop_files import CropFileManager
 from utils.px_mm_converter import PXMMConverter
 import numpy as np
+from cvm import CvmBuilder
 import sys
 class CropSlabsCVAT:
     def __init__(self, data_path, 
@@ -54,7 +55,29 @@ class CropSlabsCVAT:
             self.crop()
             self.recorded = True
 
- 
+        if 'segmentation' in mode:
+            self.crack_stats_calculation()
+
+
+    
+
+    def crack_stats_calculation(self):
+        """Calculates the crack width and length for each slab and updates
+        each slab entry accordingly.
+        """
+        img_path = os.path.join(self.file_manager.data_path, 
+                                'Slabs', 'output_segmentation')
+        
+        for i in tqdm(range(1, len(self.file_manager.input_im_files) + 1), 
+                      desc="Calculating crack width and length"):
+            p = os.path.join(img_path, f'{str(i)}.jpg')
+            builder = CvmBuilder()
+            builder.use_seg_img_path(p)
+            model = builder.build()
+            total_length = sum(model.branches_length)
+            self.slab_writer.add_crack_stats(i, total_length)
+            
+
     def crop(self):
         """Algorithm to crop slabs from the dataset. 
         """

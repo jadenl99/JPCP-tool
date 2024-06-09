@@ -99,7 +99,8 @@ class App(QApplication):
 
         # Each year to annotate has its own MVC components
         for year in reg_data['years']:
-            year_model = YearPanelModel(year, self.slab_inventory, reg_data['segment_id'])
+            year_model = YearPanelModel(year, self.slab_inventory, 
+                                        reg_data['segment_id'])
             year_controller = YearPanelController(year_model)
             year_view = YearPanel(year_controller, year_model)
             self.year_models[year] = year_model

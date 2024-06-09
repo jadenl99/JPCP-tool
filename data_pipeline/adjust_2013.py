@@ -146,10 +146,11 @@ def sort_by_number(filename):
     return int(filename.split('.')[0])  
 
 
-dir_list = os.listdir(dir)
-dir_list.sort(key=sort_by_number, reverse=True)
+
 
 dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output_range//" # Change this to the directory of the range images
+dir_list = os.listdir(dir)
+dir_list.sort(key=sort_by_number, reverse=True)
 for filename in dir_list:
     number = int(filename.split('.')[0])
     if number >= 1536:
