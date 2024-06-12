@@ -1,6 +1,6 @@
 # JPCP-tool
 ## Running the Pipeline Locally with MongoDB 
-The pipeline uses MongoDB to store data. Refer to this [link](https://www.mongodb.com/docs/manual/installation) on installation instructions for MongoDB. You will probably be prompted with the option to install MongoDBCompass, during the installation process, so install that if you want a visual GUI to interact with the data. 
+The pipeline uses MongoDB to store data. Refer to this [link](https://www.mongodb.com/docs/manual/installation) on installation instructions for MongoDB. You will probably be prompted with the option to install MongoDBCompass during the installation process, so install that if you want a visual GUI to interact with the data. 
 For now, the python scripts connect to the local server using the default local connection string, `mongodb://localhost:27017`.
 
 ## Overview 
@@ -43,6 +43,7 @@ For each year, the necessary inputs are
 │   │   └───annotations.xml
 │   ├───Intensity
 │   ├───Range
+│   ├───Segmentation (optional)
 ``` 
 Note that the `annotations.xml` file generated after CVAT modifications should go under the `CVAT_output` folder. 
 ### Output
@@ -51,6 +52,10 @@ In the specified `<year>` folder, a `Slabs` folder will be created/overriden wit
 * Run `python cropapp.py -f crop-slabs -d <path-to-data> -b <beginMM> -e <endMM> -i <interstate> -y <year> --mode range intensity`. The interstate argument should be formated like `I16WB`, include direction as well. Run this for each year in the segment.
   * If you only want to crop the range or intensity, drop `range` or `intensity`.
 * If you only want to validate the joints are correctly annotated, run the function `-f validation-only` instead. Note that the check for the joints is not comprehensive. 
+### Including Segmentation Images and Crack Length for Each Slab
+* Run the `predict_folder.py` script in the `DL_Crack_Segmentation` repository (seperate from this application) and name the output folder `Segmentation` to be used as input later.
+* To the `--mode` argument in the command line to run the crop app, add `segmentation`.
+* The script will then crop all the images first, then calculate the crack lengths and updates the database accordingly. The crack calculations themselves will take a bit of time. If you are not interested in getting the crack lengths, you can safely interrupt the execution of the script.
 
 ## Step 3: Slab Registration
 ### Input 
@@ -58,7 +63,7 @@ There is no input necessary, other than the info to fill out for the slab regist
 ### Output 
 Registration data will be stored in the database. 
 ### Instructions for Running 
-* On the root, top level directory, run `python app.py`. Fill out the form on the top. For the `select directory`, select your `<data>` folder. Then navigate to the slab registration panel and fill out the form.
+* On the root, top level directory, run `python app.py`. Fill out the form on the top. For the `select directory`, select your `<data>` folder. Then navigate to the slab registration panel and fill out the form. Wait for registration to complete, then close and rerun the application to move on to the slab classification phase (this is necessary to trigger an update).
 
 ## Step 4: Slab Classification
 ### Setting up the File System
@@ -82,7 +87,7 @@ The annotation tool takes in all the slab images and the state information from 
 There is no output. Run the slab registration algorithm again to get the spreadsheet with all the slab states.
 
 ### Instructions
-In the root directory, run `python app.py`. A main menu should pop up. When choosing the directory, choose the `<data>` folder (refer to the section on setting up the file system). Then choose a registration to annotate. After submitting the form, if parameters are valid, the main annotation tool will pop up. Progress will save along the way, so the app can safely be closed and reopened again. A save occurs when you navigate to the next/previous slab. After you are done annotating, go back to the slab registration step to produce the final spreadsheet. To install dependencies, run `pip install -r requirements.txt`.      
+In the root directory, run `python app.py`. A main menu should pop up. When choosing the directory, choose the `<data>` folder (refer to the section on setting up the file system). Then choose a registration to annotate. After submitting the form, if parameters are valid, the main annotation tool will pop up. Progress will save along the way, so the app can safely be closed and reopened again. A save occurs when you navigate to the next/previous slab. After you are done annotating, go back to the slab registration step to produce the final spreadsheet.  
 ### Tips 
 There are shortcuts available to toggle Range and Intensity images. Press `CTRL + R` to display Range images, and `CTRL + I` to display the Intensity images. Other shortcuts: 
 * `ALT + ->` to go to the next images

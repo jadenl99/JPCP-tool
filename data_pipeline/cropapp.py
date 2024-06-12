@@ -12,7 +12,7 @@ if __name__ == '__main__':
                         type=str,
                         # default='crop-slabs',
                         required=True,
-                        help='Function to run ("crop-slabs" | "validation-only" | "crack-length)')
+                        help='Function to run ("crop-slabs" | "validation-only")')
 
     parser.add_argument('-d',
                         metavar='<filepath>',
