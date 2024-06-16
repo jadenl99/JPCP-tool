@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 import csv
 import cv2
 import os
-import shutil
 from collections import deque
 from crop_slab.subjoint import SubJoint
 from crop_slab.joint import HorizontalJoint
@@ -354,7 +353,7 @@ class CropSlabsCVAT:
                             "end_im": input_files[top_img_index],      
                             "y_offset (mm)": y_mm_offset, 
                             "y_min (mm)": y_mm_bottom,
-                            "y_max (mm)": y_mm_top  
+                            "y_max (mm)": y_mm_top
                             })
         
 

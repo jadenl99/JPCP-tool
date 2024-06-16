@@ -162,6 +162,8 @@ class SlabWriter:
             'y_offset': y_offset,
             'y_min': y_min,
             'y_max': y_max,
+            'x_min': bottom_joint.get_min_x() * 4,
+            'x_max': bottom_joint.get_max_x() * 4,
             'num_faulting_vals': num_faulting_entries,
             'num_invalid': num_invalid,
             'num_outliers': num_outliers,
