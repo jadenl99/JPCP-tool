@@ -1,6 +1,5 @@
 import sys
-
-from crop_slab import subjoint
+import crop_app.subjoint as subjoint
 class HorizontalJoint:
     """A horizontal joint is a joint that spans from the left boundary of the
     lane to the right boundary of the lane. Joints need not be parallel to the

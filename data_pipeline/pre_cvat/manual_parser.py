@@ -241,23 +241,6 @@ class ManualXML_CVAT_Parser:
 
 
 
-if __name__ == "__main__":
-    data_dir = 'data'
-    px_height = 1250
-    px_width = 1040
-    mm_height = 1250 * 4
-    mm_width = 1040 * 4
-    mode = 'range'
-    task_size = 1000000000
-    begin_MM = 22
-    end_MM = 12
-    year = 2014
-    interstate = 'I16WB'
-    ManualXML_CVAT_Parser(data_dir, px_height, px_width, 
-                          mm_height, mm_width, mode, task_size,
-                          begin_MM, end_MM, year, interstate)
-
-
     
     
                 

@@ -10,21 +10,25 @@ import csv
 import cv2
 import os
 from collections import deque
-from crop_slab.subjoint import SubJoint
-from crop_slab.joint import HorizontalJoint
-from crop_slab.utils.functions import LinearFunction
-from db_operation.slab_writer import SlabWriter
+from crop_app.subjoint import SubJoint
+from crop_app.joint import HorizontalJoint
+from utils.functions import LinearFunction
 from file_manager.crop_files import CropFileManager
 from utils.px_mm_converter import PXMMConverter
 import numpy as np
-from cvm import CvmBuilder
-import sys
+import crop_app.fault_calc as fc
+from utils.cvm import CvmBuilder
+
 class CropSlabsCVAT:
     def __init__(self, data_path, 
                  px_height, px_width, 
                  mm_height, mm_width,
-                 mode, begin_MM, end_MM, year, interstate, validation_only=False):
+                 mode, begin_MM, end_MM, year, interstate, 
+                 slab_inventory, validation_only=False):
         # filepath of the dataset
+        self.seg_str = f"{interstate}_MM{begin_MM}_MM{end_MM}"
+        self.year = year
+        self.slab_inventory = slab_inventory
         self.recorded = False
         self.data_path = data_path
         self.px_height = px_height
@@ -48,8 +52,10 @@ class CropSlabsCVAT:
                 self.scaler = PXMMConverter(self.px_height, self.px_width, 
                                             self.mm_height, self.mm_width,
                                             len(self.file_manager.input_im_files))
-            if not self.slab_writer and not self.validation_only:
-                self.slab_writer = SlabWriter(interstate, begin_MM, end_MM, year, self.scaler) 
+            if not self.recorded and not self.validation_only:
+                self.slab_inventory.delete_segment_year_slabs(
+                    self.seg_str, year
+                    )
             self.num_files = len(self.file_manager.input_im_files)  
             self.crop()
             self.recorded = True
@@ -74,7 +80,8 @@ class CropSlabsCVAT:
             builder.use_seg_img_path(p)
             model = builder.build()
             total_length = sum(model.branches_length)
-            self.slab_writer.add_crack_stats(i, total_length)
+            self.slab_inventory.add_crack_stats(
+                i, total_length, self.seg_str, self.year)
             
 
     def crop(self):
@@ -222,7 +229,7 @@ class CropSlabsCVAT:
             y_offset (float): y-offset of the slab of interest
 
         Returns:
-            np.ndarray: _description_
+            np.ndarray: the cropped image
         """
         # crop image first so less black pixels need to be added
         y_abs_min = int(top_joint.get_min_y() - y_offset)
@@ -357,12 +364,32 @@ class CropSlabsCVAT:
                             })
         
 
-        start_im = self.file_manager.get_im_id(input_files[bottom_img_index]) 
-        end_im = self.file_manager.get_im_id(input_files[top_img_index])
+        
         if not self.recorded and not self.validation_only:
-            self.slab_writer.write_slab_entry(self.slab_num, mm_length, mm_width, 
-                                          start_im, end_im, y_mm_offset, 
-                                          y_mm_bottom, y_mm_top, bottom_joint)
+            start_im = self.file_manager.get_im_id(
+                input_files[bottom_img_index]) 
+            end_im = self.file_manager.get_im_id(input_files[top_img_index])
+            x_min_px = bottom_joint.get_min_x()
+            x_max_px = bottom_joint.get_max_x()
+            x_min_mm = self.scaler.convert_px_to_mm_relative(x_min_px, 0, 0)[0]
+            x_max_mm = self.scaler.convert_px_to_mm_relative(x_max_px, 0, 0)[0]
+
+            faulting_data = fc.get_faulting_data(y_mm_bottom, y_mm_top,
+                                             self.seg_str, self.year,
+                                             self.slab_inventory)
+        
+            faulting_data_in_range = fc.find_subjoints_in_range_dict(
+                faulting_data, x_min_mm, x_max_mm)
+            x_faulting_vals =  [
+                entry['x_val'] for entry in faulting_data_in_range
+                ]
+            faulting_vals = [
+                entry['data'] for entry in faulting_data_in_range
+                ]
+            self.slab_inventory.write_slab_entry(
+                self.seg_str, self.year, self.slab_num, mm_length, mm_width, 
+                start_im, end_im, y_mm_offset, y_mm_bottom, y_mm_top, x_min_mm, 
+                x_max_mm, x_faulting_vals, faulting_vals)
             
         if mm_width < 2750:
             with open(self.file_manager.debug_path, 'a') as debug_file:

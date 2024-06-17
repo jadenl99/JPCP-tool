@@ -1,6 +1,6 @@
 import argparse
-from crop_slab.crop_slab_cvat import CropSlabsCVAT
-
+from crop_app.crop_slab_cvat import CropSlabsCVAT
+from database.db import SlabInventory
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Slab detection project for Georgia Tech Smart Cities Lab\n'
@@ -106,4 +106,4 @@ if __name__ == '__main__':
     v_only = False
     if func == "validation-only":
         v_only = True
-    CropSlabsCVAT(dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate, v_only)
+    CropSlabsCVAT(dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate, SlabInventory(), v_only)

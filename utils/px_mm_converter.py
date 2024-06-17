@@ -32,7 +32,7 @@ class PXMMConverter:
 
 
     def convert_mm_to_px(self, mm_x, mm_y, img_index):
-        """Converts millimeter coordinaets to px coordinates. Assumes that
+        """Converts millimeter coordinates to px coordinates. Assumes that
         the origin for px measurement is the top left corner of the image and 
         the origin for the mm measurement is the bottom left corner of the 
         image. y-values are relative to the first image of the segment.

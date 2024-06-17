@@ -6,6 +6,7 @@ class SlabInventory():
         self.client = MongoClient(CONNECTION_STRING)
         self.db = self.client['jpcp_deterioration']
         self.registration_collection = self.db['registration']
+        self.raw_subjoint_collection = self.db['raw_subjoint_data']
         self.slab_collection = self.db['slabs']
         self.requests = []
 
@@ -169,6 +170,97 @@ class SlabInventory():
         }
         self.registration_collection.insert_one(entry)
     
+
+    def add_crack_stats(self, slab_index, crack_length, seg_str, year):
+        """Adds crack stats to the slab entry
+
+        Args:
+            slab_index (int): index of the slab
+            crack_length (float): length of the crack
+            seg_str (str): segment string
+            year (int): year of the slab
+        """
+        seg_year_id = f'{seg_str}_{year}'
+        self.slab_collection.update_one(
+            {'seg_year_id': seg_year_id, 'slab_index': slab_index},
+            {'$set': {'crack_length': crack_length}}
+        )
+
+
+    def delete_segment_year_slabs(self, seg_str: str, year: int):
+        """Deletes all slabs in a segment for a given year
+
+        Args:
+            seg_str (str): The segment string
+            year (int): The year to delete the slabs for
+        """
+        seg_year_id = f'{seg_str}_{year}'
+        self.slab_collection.delete_many({'seg_year_id': seg_year_id})
+
+
+    def find_subjoints_in_range(self, y_min: float, y_max: float, seg_str: str,
+                                year: int):
+        """Finds all subjoint data within the y-ranges
+
+        Args:
+            y_min (float): min y-value, expressed in mm, in terms of the whole
+            segment
+            y_max (float): max y-value, expressed in mm, in terms of the whole
+            segment
+            seg_str (str): the segment string
+            year (int): the year of the data
+
+        Returns:
+            pymongo.cursor.Cursor: cursor object containing all subjoint data
+            within the y-ranges
+        """
+        seg_year_id = f'{seg_str}_{year}'
+        raw_subjoints = self.raw_subjoint_collection.find(
+            {
+                '$or': 
+                [
+                    {
+                        'seg_year_id': seg_year_id,
+                        'y_min': {'$gte': y_min - 100, '$lte': y_max + 100}
+                    },
+                    {
+                        'seg_year_id': seg_year_id,
+                        'y_max': {'$gte': y_min - 100, '$lte': y_max + 100}
+                    }
+                ]
+            }
+        ).sort("x_min", pymongo.ASCENDING)
+        return raw_subjoints
+    
+
+    def write_slab_entry(self, seg_str: str, year: int, slab_index: int, 
+                         length: float, width: float, start_im: int, 
+                         end_im: int, y_offset: float, y_min: float, 
+                         y_max: float, x_min: float, x_max: float, 
+                         x_faulting_vals: list[float], 
+                         faulting_vals: list[float]):
+        entry = {
+            'seg_year_id': f'{seg_str}_{year}',
+            'slab_index': slab_index,
+            'length': length,
+            'width': width,
+            'start_im': start_im,
+            'end_im': end_im,
+            'y_offset': y_offset,
+            'y_min': y_min,
+            'y_max': y_max,
+            'x_min': x_min,
+            'x_max': x_max,
+            'x_faulting_vals': x_faulting_vals,
+            'faulting_vals': faulting_vals,
+            'crack_length': None,
+            'primary_state': None,
+            'secondary_state': None,
+            'special_state': None
+        }
+        self.slab_collection.insert_one(entry)
+
+
 
     # def update_offsets(self, seg_str: str, year: int, shift: float):
     #     """Updates the y_offset for all slabs in a year

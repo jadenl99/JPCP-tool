@@ -1,8 +1,16 @@
 import os
 import shutil
-from file_manager.image_type import ImageType
+
 from file_manager.files import FileManager
 import xml.etree.ElementTree as ET
+from enum import Enum
+
+class ImageType(Enum):
+    RANGE = 'range'
+    INTENSITY = 'intensity'
+    SEGMENTATION = 'segmentation'
+
+
 class CropFileManager(FileManager):
     def __init__(self, main_path, year):
         super().__init__(main_path)

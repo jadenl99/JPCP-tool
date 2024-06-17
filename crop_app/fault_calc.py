@@ -1,140 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
-def avg_faulting(arr: np.array):
-    """Calculates the average faulting value in array (magnitude), handling the 
-    -10000 values as well as outliers using the IQR method. These values are 
-    then turned into NaN values and nearest neighbors interpolation is used, 
-    then average is calculated
-   
-    Args:
-        arr (np.array): NumPy array of all the faulting values
-    
-    Returns:
-        float: The average faulting value
 
-    Raises:
-        ValueError: If the array cannot be converted to a float
-    """
-    try:
-        arr = arr.astype(float)
-    except ValueError:
-        raise ValueError("Array cannot be converted to float")
-    if np.all(np.isnan(arr)):
-        return None
-    filtered_arr = mask_outliers(arr)
-    if np.all(np.isnan(filtered_arr)):
-        return None
-    filtered_arr = np.abs(filtered_arr)
-    filtered_arr = nn_interpolate(filtered_arr)
-
-    mean = np.mean(filtered_arr)
-
-    if np.isnan(mean):
-        return None
-    return mean
-
-
-def median_faulting(arr: np.array):
-    """Calculates the median of the MAGNITUDE of the faulting values 
-    in the array, handling BOTH the -10000 values and outliers. These values are 
-    then turned into NaN values and nearest neighbors interpolation is used on
-    those NaN values, and the calculation is made.
-   
-
-    Args:
-        arr (np.array): NumPy array of all the faulting values
-    
-    Returns:
-        float: The average faulting value
-
-    Raises:
-        ValueError: If the array cannot be converted to a float
-    """
-    try:
-        arr = arr.astype(float)
-    except ValueError:
-        raise ValueError("Array cannot be converted to float")
-    if np.all(np.isnan(arr)):
-        return None
-    filtered_arr = mask_outliers(arr)
-    if np.all(np.isnan(filtered_arr)):
-        return None
-    filtered_arr = np.abs(filtered_arr)
-    filtered_arr = nn_interpolate(filtered_arr)
-
-    median = np.median(filtered_arr)
-
-    if np.isnan(median):
-        return None
-    return median
-
-
-def percentile95_faulting(arr: np.array): 
-    """Calculates the 95th percentile of the MAGNITUDE of the faulting values 
-    in the array, handling BOTH the -10000 values and outliers. These values are 
-    then turned into NaN values and nearest neighbors interpolation is used on
-    those NaN values, then the calculation is made.
-   
-
-    Args:
-        arr (np.array): NumPy array of all the faulting values
-    
-    Returns:
-        float: The 95th percentile faulting value
-
-    Raises:
-        ValueError: If the array cannot be converted to a float
-    """
-    try:
-        arr = arr.astype(float)
-    except ValueError:
-        raise ValueError("Array cannot be converted to float")
-    
-    filtered_arr = mask_outliers(arr)
-    if np.all(np.isnan(arr)):
-        return None
-    filtered_arr = np.abs(filtered_arr)
-    filtered_arr = nn_interpolate(filtered_arr)
-
-    percentile = np.percentile(filtered_arr, 95)
-
-    if np.isnan(percentile):
-        return None
-    return percentile
-
-
-def stdev_faulting(arr: np.array):
-    """Calculates the standard deviation of the MAGNITUDE of the faulting values 
-    in the array, handling BOTH the -10000 values and outliers. These values are 
-    then turned into NaN values and nearest neighbors interpolation is used on
-    those NaN values, then the calculation is made.
-
-    Args:
-        arr (np.array): NumPy array of all the faulting values
-
-    Returns:
-        float: The standard deviation of the faulting values
-    
-    Raises:
-        ValueError: If the array cannot be converted to a float
-    """
-    try:
-        arr = arr.astype(float)
-    except ValueError:
-        raise ValueError("Array cannot be converted to float")
-    if np.all(np.isnan(arr)):
-        return None
-    filtered_arr = mask_outliers(arr)
-    if np.all(np.isnan(filtered_arr)):
-        return None
-    filtered_arr = np.abs(filtered_arr)
-    filtered_arr = nn_interpolate(filtered_arr)
-    std = np.std(filtered_arr)
-
-    if np.isnan(std):
-        return None
-    return std
-    
 
 def nn_interpolate(arr: np.array):
     """Interpolates the NaN values in the array using the nearest neighbors
@@ -219,65 +85,6 @@ def mask_outliers(arr: np.array):
     mask = np.logical_or(arr <= lower_bound, arr >= upper_bound, np.isnan(arr))
     arr_copy[mask] = np.nan
     return arr_copy
-
-
-def calc_all_stats(arr: np.array):
-    """Calculates all the statistics of the faulting values in the array.
-
-    Args:
-        arr (np.array): NumPy array of all the faulting values
-
-    Returns:
-        dict: Dictionary containing all the statistics
-    
-    Raises:
-        ValueError: If the array cannot be converted to a float
-    """
-    try:
-        arr = arr.astype(float)
-    except ValueError:
-        raise ValueError("Array cannot be converted to float")
-    filtered_arr = mask_outliers(arr)
-    if np.all(np.isnan(filtered_arr)):
-        return{'mean': None, 'median': None, 'percentile95': None, 
-            'stdev': None, 'percent_positive': None}
-    filtered_arr = nn_interpolate(filtered_arr)
-    percent_positive_val = percent_positive(filtered_arr)
-    abs_arr = np.abs(filtered_arr)
-    
-    mean = np.mean(abs_arr)
-    median = np.median(abs_arr)
-    percentile95 = np.percentile(filtered_arr, 95)
-    stdev = np.std(abs_arr)
-    
-    return {'mean': mean, 'median': median, 'percentile95': percentile95, 
-            'stdev': stdev, 'percent_positive': percent_positive_val}
-
-
-def percent_positive(arr: np.ndarray):
-    """Calculates the percentage of positive values in the array.
-
-    Args:
-        arr (np.ndarray): array of faulting values
-
-    Returns:
-        float: percentage of positive values
-    
-    Raises:
-        ValueError: If the array cannot be converted to a float
-    """
-    arr_copy = arr.copy()
-
-    try:
-        arr_copy = arr_copy.astype(float)
-    except ValueError:
-        raise ValueError("Array cannot be converted to float")
-
-    filtered_arr = mask_outliers(arr)
-    filtered_arr = nn_interpolate(filtered_arr)
-    if np.all(np.isnan(filtered_arr)):
-        return None
-    return np.sum(filtered_arr > 0) / float(len(filtered_arr))
 
 
 def find_subjoints_in_range(fault_vals: list[dict[float, float]], 
@@ -382,5 +189,39 @@ def find_subjoints_in_range_dict(fault_vals: list[dict[float, float]],
             i in range(len(entries))]
     
 
+def get_faulting_data(y_min_mm, y_max_mm, seg_str, year, slab_inventory):
+    """Gets all the faulting data for the slab of interest, identified
+    with the bottom joint of the slab.
+
+    
+    Args:
+        y_min_mm (float): minimum y-value in mm, expressed in terms of the 
+        whole segment
+        y_max_mm (float): maximum y-value in mm, expressed in terms of the 
+        whole segment
+        seg_str (str): the segment string
+        year (int): the year of the data
+        slab_inventory (SlabInventory): the slab inventory object for access to 
+        database
+
+    Returns:
+        list: list of faulting values for the bottom joint
+    """
+    raw_subjoints = slab_inventory.find_subjoints_in_range(y_min_mm, y_max_mm,
+                                                           seg_str, year) 
+
+    faulting_entries = []
+    x_cover = -1
+    for raw_subjoint in raw_subjoints:         
+        fault_vals = raw_subjoint['faulting_info']
+        if not fault_vals:
+            continue
+        fault_vals = [entry for entry in fault_vals if entry['x_val'] > x_cover]
+        if not fault_vals:
+            continue
+        x_cover = fault_vals[-1]['x_val']
+        faulting_entries.extend(fault_vals)
+
+    return faulting_entries
 
 
