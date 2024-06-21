@@ -17,8 +17,8 @@ from file_manager.crop_files import CropFileManager
 from utils.px_mm_converter import PXMMConverter
 import numpy as np
 import crop_app.fault_calc as fc
-from utils.cvm import CvmBuilder
-
+from cvm import CvmBuilder
+import concurrent.futures
 class CropSlabsCVAT:
     def __init__(self, data_path, 
                  px_height, px_width, 
@@ -73,15 +73,33 @@ class CropSlabsCVAT:
         img_path = os.path.join(self.file_manager.data_path, 
                                 'Slabs', 'output_segmentation')
         
-        for i in tqdm(range(1, len(self.file_manager.input_im_files) + 1), 
-                      desc="Calculating crack width and length"):
-            p = os.path.join(img_path, f'{str(i)}.jpg')
-            builder = CvmBuilder()
-            builder.use_seg_img_path(p)
-            model = builder.build()
-            total_length = sum(model.branches_length)
-            self.slab_inventory.add_crack_stats(
-                i, total_length, self.seg_str, self.year)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(self.task, img_path, i) for i in range(1, self.num_files + 1)]
+            for future in concurrent.futures.as_completed(futures):
+                future.result()
+            
+    
+
+    def task(self, img_path, img_num):
+        print(f'Processing image {img_num}')
+        p = os.path.join(img_path, f'{str(img_num)}.jpg')
+        builder = CvmBuilder()
+        builder.use_seg_img_path(p)
+        model = builder.build()
+        total_length = sum(model.branches_length)
+        widths = model.branches_width
+        sum_m = 0
+        count = 0
+        for width in widths:
+            for w in width:
+                sum_m += w
+                count += 1
+        avg_width = 0 if count == 0 else sum_m / count
+        self.slab_inventory.add_crack_stats(img_num, total_length, avg_width, 
+                                            self.seg_str, self.year)
+        print(f'Finished processing image {img_num}')
+        
+
             
 
     def crop(self):

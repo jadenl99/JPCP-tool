@@ -171,19 +171,21 @@ class SlabInventory():
         self.registration_collection.insert_one(entry)
     
 
-    def add_crack_stats(self, slab_index, crack_length, seg_str, year):
+    def add_crack_stats(self, slab_index, crack_length, avg_crack_width, 
+                        seg_str, year):
         """Adds crack stats to the slab entry
 
         Args:
             slab_index (int): index of the slab
             crack_length (float): length of the crack
+            avg_crack_width (float): average width of the crack
             seg_str (str): segment string
             year (int): year of the slab
         """
         seg_year_id = f'{seg_str}_{year}'
         self.slab_collection.update_one(
             {'seg_year_id': seg_year_id, 'slab_index': slab_index},
-            {'$set': {'crack_length': crack_length}}
+            {'$set': {'total_crack_length': crack_length, 'avg_crack_width': avg_crack_width}}
         )
 
 
@@ -253,7 +255,8 @@ class SlabInventory():
             'x_max': x_max,
             'x_faulting_vals': x_faulting_vals,
             'faulting_vals': faulting_vals,
-            'crack_length': None,
+            'total_crack_length': None,
+            'avg_crack_width': None,
             'primary_state': None,
             'secondary_state': None,
             'special_state': None
