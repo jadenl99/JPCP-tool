@@ -200,6 +200,8 @@ class YearPanelModel(QObject):
             else:
                 self._slabs_info['width'].append(slab_data['width'] / 304.8)
             self._slabs_info['mean_faulting'].append(slab_data['mean_faulting'])
+            self._slabs_info['start_im'].append(slab_data['start_im'])
+            self._slabs_info['end_im'].append(slab_data['end_im'])
 
         self.refresh_CY_slab_info()
     

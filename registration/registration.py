@@ -283,6 +283,10 @@ class SlabRegistration(QObject):
                 fields.append(f'{year}_state')
             for year in self.years:
                 fields.append(f'{year}_faulting')
+            for year in self.years:
+                fields.append(f'{year}_total_crack_length')
+            for year in self.years:
+                fields.append(f'{year}_average_crack_width')
             
             curr_MP = beginMM
             fields.extend(['year_replaced', 'replaced_type'])
@@ -309,6 +313,8 @@ class SlabRegistration(QObject):
                             self.avg_faulting_BY(i, year) if avg_faulting
                             else yr_slab['mean_faulting']
                             )
+                        row_dict[f'{year}_total_crack_length'] = yr_slab['total_crack_length'] if 'total_crack_length' in yr_slab else None
+                        row_dict[f'{year}_average_crack_width'] = yr_slab['avg_crack_width'] if 'avg_crack_width' in yr_slab else None
                     if year == self.by:
                         row_dict['BY_id'] = yr_id
                         row_dict['BY_length (ft)'] = round(yr_slab['length'] / 

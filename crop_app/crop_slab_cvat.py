@@ -18,6 +18,8 @@ from utils.px_mm_converter import PXMMConverter
 import numpy as np
 import crop_app.fault_calc as fc
 from cvm import CvmBuilder
+import matplotlib
+#matplotlib.use('Agg')
 import concurrent.futures
 class CropSlabsCVAT:
     def __init__(self, data_path, 
@@ -72,11 +74,12 @@ class CropSlabsCVAT:
         """
         img_path = os.path.join(self.file_manager.data_path, 
                                 'Slabs', 'output_segmentation')
-        
+        num_files = len(os.listdir(img_path))
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(self.task, img_path, i) for i in range(1, self.num_files + 1)]
+            futures = [executor.submit(self.task, img_path, i) for i in range(1, num_files + 1)]
             for future in concurrent.futures.as_completed(futures):
-                future.result()
+                future.result()   
+        
             
     
 
@@ -97,6 +100,9 @@ class CropSlabsCVAT:
         avg_width = 0 if count == 0 else sum_m / count
         self.slab_inventory.add_crack_stats(img_num, total_length, avg_width, 
                                             self.seg_str, self.year)
+        # save_file = "C:\\Users\\jaden\\Documents\\GitHub\\JPCP-tool\\data\\2015\\SegPlot"
+        # save_file = os.path.join(save_file, f'{str(img_num)}.jpg')
+        # model.plot_on(p, save_to_file=save_file)
         print(f'Finished processing image {img_num}')
         
 
@@ -401,13 +407,59 @@ class CropSlabsCVAT:
             x_faulting_vals =  [
                 entry['x_val'] for entry in faulting_data_in_range
                 ]
+            x_registered_vals = fc.register_x_values(x_min_mm, x_max_mm, 
+                                                     x_faulting_vals)
             faulting_vals = [
                 entry['data'] for entry in faulting_data_in_range
                 ]
+            filtered_faulting_vals = fc.generate_filtered_entries(
+                np.array(faulting_vals))
+            
+            mean_faulting = None
+            percentile95_faulting = None
+            std_faulting = None
+            median_faulting = None
+            percentage_positive = None
+            z1_median = None
+            z2_median = None
+            z3_median = None
+            z4_median = None
+            z5_median = None
+            if filtered_faulting_vals is not None: 
+                mean_faulting = np.mean(np.abs(filtered_faulting_vals))
+                std_faulting = np.std(filtered_faulting_vals)
+                percentile95_faulting = np.percentile(filtered_faulting_vals, 95) 
+                median_faulting = np.median(np.abs(filtered_faulting_vals))
+                percentage_positive = fc.percent_positive(np.array(faulting_vals))
+                zones = fc.zone_data(x_registered_vals, filtered_faulting_vals)
+                z1_median = np.median(np.abs(zones[0]))
+                z2_median = np.median(np.abs(zones[1]))
+                z3_median = np.median(np.abs(zones[2]))
+                z4_median = np.median(np.abs(zones[3]))
+                z5_median = np.median(np.abs(zones[4]))
+                    
+            if mean_faulting:
+                mean_faulting = round(mean_faulting, 4)
+            if std_faulting:
+                std_faulting = round(std_faulting, 4)
+            if percentile95_faulting:
+                percentile95_faulting = round(percentile95_faulting, 4)
+            if median_faulting:
+                median_faulting = round(median_faulting, 4)
+            if percentage_positive:
+                percentage_positive = round(percentage_positive, 4)
+            filtered_faulting_vals = filtered_faulting_vals.tolist() if filtered_faulting_vals is not None else None
+            
+            
+            
+
             self.slab_inventory.write_slab_entry(
                 self.seg_str, self.year, self.slab_num, mm_length, mm_width, 
                 start_im, end_im, y_mm_offset, y_mm_bottom, y_mm_top, x_min_mm, 
-                x_max_mm, x_faulting_vals, faulting_vals)
+                x_max_mm, x_faulting_vals, x_registered_vals, faulting_vals,
+                filtered_faulting_vals, mean_faulting, std_faulting,
+                median_faulting, percentile95_faulting, percentage_positive,
+                z1_median, z2_median, z3_median, z4_median, z5_median)
             
         if mm_width < 2750:
             with open(self.file_manager.debug_path, 'a') as debug_file:

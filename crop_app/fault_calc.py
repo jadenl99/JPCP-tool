@@ -225,3 +225,139 @@ def get_faulting_data(y_min_mm, y_max_mm, seg_str, year, slab_inventory):
     return faulting_entries
 
 
+def register_x_values(x_left, x_right, x_vals, width: int=3658):
+    """If the leftmost x value is not 0, then the x values are shifted to the 
+    left. If the rightmost x value is less than the width of the slab, then
+    the x values are shifted to the right. If both conditions are met, then the
+    side that is farthest from its corresponding edge will determine the
+    direction of the shift.
+
+    Args:
+        x_left (int): the leftmost x value, in mm, of the slab
+        x_right (int): the rightmost x value, in mm, of the slab
+        x_vals (list[int]): the list of x values, in mm, to be registered. 
+        width (int, optional): the width of the slab in mm. Default is 3658 mm 
+        (12 ft).
+    
+    Returns:
+        list[int]: the registered x values
+    """
+    left_dist = x_left
+    right_dist = width - x_right
+
+    if left_dist == 0 and right_dist <= 0:
+        return x_vals[::]
+    elif left_dist > right_dist:
+        # shift to the left
+        return [x - left_dist for x in x_vals]
+    else:
+        # shift to the right
+        return [x + right_dist for x in x_vals]
+
+    
+
+def generate_filtered_entries(arr: np.array):
+    """Filters out NaN values and outliers and replaces those values with the 
+    nearest valid neighbor. Returns None if the array is all NaN values.
+
+    Args:
+        arr (np.array): NumPy array of all the faulting values
+
+    Returns:
+        arr (np.array): Filtered array of the faulting values
+    
+    Raises:
+        ValueError: If the array cannot be converted to a float
+    """
+    try:
+        arr = arr.astype(float)
+    except ValueError:
+        raise ValueError("Array cannot be converted to float")
+    filtered_arr = mask_outliers(arr)
+    if np.all(np.isnan(filtered_arr)):
+        return None
+    filtered_arr = nn_interpolate(filtered_arr)
+    
+
+    return filtered_arr
+
+
+def zone_boundaries(width: int=3658):
+    """Returns the boundaries of each zone in the slab.
+
+    Args:
+        width (int, optional): Assumed width of each slab. Defaults to 3658.
+
+    Returns:
+        tuple: Tuple containing the boundaries of each zone. tuple[0] represents
+        the boundary between zones 1 and 2, tuple[1] represents the boundary
+        between zones 2 and 3, tuple[2] represents the boundary between zones
+        3 and 4, and tuple[3] represents the boundary between zones 4 and 5.
+    """
+    buffer = (width - 2750) / 2
+    zone12 = buffer
+    zone23 = buffer + 1000
+    zone34 = buffer + 1750
+    zone45 = buffer + 2750
+    
+    return zone12, zone23, zone34, zone45
+
+
+def zone_data(adjusted_x_vals: list[int], 
+              faulting_vals: list[int], 
+              width: int=3658):
+    """Returns the faulting values for each zone for the joint.
+
+    Args:
+        x_vals (list[int]): List of x values for the slab. Preferrably, this
+        will be the ADJUSTED x-axis values.
+        faulting_vals (list[int]): List of faulting values for the slab
+        width (int, optional): Assumed width of each slab. Defaults to 3658.
+
+    Returns:
+        tuple: Tuple containing the faulting values for each zone in a numpy 
+        array. tuple[0] represents the faulting values for zone 1, tuple[1] 
+        represents the faulting values for zone 2, tuple[2] represents the 
+        faulting values for zone 3, tuple[3] represents the faulting values 
+        for zone 4, and tuple[4] represents the faulting values for zone 5.
+    """
+    zone12, zone23, zone34, zone45 = zone_boundaries(width)
+
+    adjusted_x_vals = np.array(adjusted_x_vals)
+    faulting_vals = np.array(faulting_vals)
+
+    zone1vals = faulting_vals[adjusted_x_vals < zone12]
+    zone2vals = faulting_vals[(adjusted_x_vals >= zone12) & 
+                              (adjusted_x_vals < zone23)]
+    zone3vals = faulting_vals[(adjusted_x_vals >= zone23) & 
+                              (adjusted_x_vals < zone34)]
+    zone4vals = faulting_vals[(adjusted_x_vals >= zone34) & 
+                              (adjusted_x_vals < zone45)]
+    zone5vals = faulting_vals[adjusted_x_vals >= zone45]
+    return zone1vals, zone2vals, zone3vals, zone4vals, zone5vals
+    
+
+def percent_positive(arr: np.ndarray):
+    """Calculates the percentage of positive values in the array.
+
+    Args:
+        arr (np.ndarray): array of faulting values
+
+    Returns:
+        float: percentage of positive values
+    
+    Raises:
+        ValueError: If the array cannot be converted to a float
+    """
+    arr_copy = arr.copy()
+
+    try:
+        arr_copy = arr_copy.astype(float)
+    except ValueError:
+        raise ValueError("Array cannot be converted to float")
+
+    filtered_arr = mask_outliers(arr)
+    filtered_arr = nn_interpolate(filtered_arr)
+    if np.all(np.isnan(filtered_arr)):
+        return None
+    return np.sum(filtered_arr > 0) / float(len(filtered_arr))
