@@ -2,8 +2,12 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from enum import Enum
 
 class ImageType(Enum):
+    # cropped images
     RANGE = 'output_range'
     INTENSITY = 'output_intensity'
+    # uncropped iamges
+    RAW_RANGE = 'Range'
+    RAW_INTENSITY = 'Intensity'
 
 class ToolModel(QObject):
     replaced_year_changed = pyqtSignal(int)
@@ -28,7 +32,7 @@ class ToolModel(QObject):
         self._seg_id = all_reg_data['_id']
         self._seg_str = all_reg_data['segment_id']
         self._reg_data = all_reg_data['registration_data']
-        self._directory = directory
+        self._directory = directory.replace('/', '\\')
         self._slab_inventory = slab_inventory
         self._image_type = ImageType.RANGE
         self._first_BY_index = self._reg_data[0]['base_id']
@@ -95,8 +99,12 @@ class ToolModel(QObject):
         """
         if image_type == 'output_intensity':
             self._image_type = ImageType.INTENSITY
-        else:
+        elif image_type == 'output_range':
             self._image_type = ImageType.RANGE
+        elif image_type == 'Intensity':
+            self._image_type = ImageType.RAW_INTENSITY
+        else:
+            self._image_type = ImageType.RAW_RANGE
 
 
     @property

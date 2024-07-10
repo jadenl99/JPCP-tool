@@ -244,6 +244,8 @@ border-style : inset;
     </property>
     <addaction name="action_range"/>
     <addaction name="action_intensity"/>
+    <addaction name="action_uncropped_range"/>
+    <addaction name="action_uncropped_intensity"/>
    </widget>
    <addaction name="menu_range"/>
   </widget>
@@ -258,6 +260,16 @@ border-style : inset;
   <action name="action_intensity">
    <property name="text">
     <string>Use Intensity</string>
+   </property>
+  </action>
+  <action name="action_uncropped_range">
+   <property name="text">
+    <string>Use Uncropped Range</string>
+   </property>
+  </action>
+  <action name="action_uncropped_intensity">
+   <property name="text">
+    <string>Use Uncropped Intensity</string>
    </property>
   </action>
  </widget>

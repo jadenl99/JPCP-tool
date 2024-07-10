@@ -75,8 +75,16 @@ class AnnotationTool(QMainWindow):
         self.action_intensity.triggered.connect(
             lambda: self._tool_controller.update_image_type('output_intensity')
         )
+        self.action_uncropped_range.triggered.connect(
+            lambda: self._tool_controller.update_image_type('Range')
+        )
+        self.action_uncropped_intensity.triggered.connect(
+            lambda: self._tool_controller.update_image_type('Intensity')
+        )
         self.action_range.setShortcut('Ctrl+R')
         self.action_intensity.setShortcut('Ctrl+I')
+        self.action_uncropped_range.setShortcut('Ctrl+Shift+R')
+        self.action_uncropped_intensity.setShortcut('Ctrl+Shift+I')
 
         
         

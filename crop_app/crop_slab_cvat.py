@@ -75,35 +75,52 @@ class CropSlabsCVAT:
         img_path = os.path.join(self.file_manager.data_path, 
                                 'Slabs', 'output_segmentation')
         num_files = len(os.listdir(img_path))
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(self.task, img_path, i) for i in range(1, num_files + 1)]
-            for future in concurrent.futures.as_completed(futures):
-                future.result()   
+        for i in tqdm(range(1, num_files + 1), desc='Calculating crack stats'):
+            p = os.path.join(img_path, f'{str(i)}.jpg')
+            img = cv2.imread(p)
+            gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)   
+            ret, binary_img = cv2.threshold(gray_img, 127, 255, cv2.THRESH_BINARY)
+            builder = CvmBuilder()
+            builder.use_seg_img_obj(binary_img)
+            model = builder.build()
+            total_length = sum(model.branches_length)
+            widths = model.branches_width
+            sum_m = 0
+            count = 0
+            for width in widths:
+                for w in width:
+                    sum_m += w
+                    count += 1
+            avg_width = 0 if count == 0 else sum_m / count
+            self.slab_inventory.add_crack_stats(i, total_length, avg_width, 
+                                            self.seg_str, self.year)
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        #     futures = [executor.submit(self.task, img_path, i) for i in range(1, num_files + 1)]
+        #     for future in concurrent.futures.as_completed(futures):
+        #         future.result()   
         
             
     
 
-    def task(self, img_path, img_num):
-        print(f'Processing image {img_num}')
-        p = os.path.join(img_path, f'{str(img_num)}.jpg')
-        builder = CvmBuilder()
-        builder.use_seg_img_path(p)
-        model = builder.build()
-        total_length = sum(model.branches_length)
-        widths = model.branches_width
-        sum_m = 0
-        count = 0
-        for width in widths:
-            for w in width:
-                sum_m += w
-                count += 1
-        avg_width = 0 if count == 0 else sum_m / count
-        self.slab_inventory.add_crack_stats(img_num, total_length, avg_width, 
-                                            self.seg_str, self.year)
-        # save_file = "C:\\Users\\jaden\\Documents\\GitHub\\JPCP-tool\\data\\2015\\SegPlot"
-        # save_file = os.path.join(save_file, f'{str(img_num)}.jpg')
-        # model.plot_on(p, save_to_file=save_file)
-        print(f'Finished processing image {img_num}')
+    # def task(self, img_path, img_num):
+    #     print(f'Processing image {img_num}')
+    #     p = os.path.join(img_path, f'{str(img_num)}.jpg')
+    #     builder = CvmBuilder()
+    #     builder.use_seg_img_path(p)
+    #     model = builder.build()
+    #     total_length = sum(model.branches_length)
+    #     widths = model.branches_width
+    #     sum_m = 0
+    #     count = 0
+    #     for width in widths:
+    #         for w in width:
+    #             sum_m += w
+    #             count += 1
+    #     avg_width = 0 if count == 0 else sum_m / count
+    #     self.slab_inventory.add_crack_stats(img_num, total_length, avg_width, 
+    #                                         self.seg_str, self.year)
+
+    #     print(f'Finished processing image {img_num}')
         
 
             
@@ -306,6 +323,9 @@ class CropSlabsCVAT:
                 y = height - 1
             y = int(y)
             img[:y, x] = [0, 0, 0]
+        
+        if self.file_manager.image_mode.value == 'segmentation':
+            pass
         return img
 
         

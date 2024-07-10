@@ -216,7 +216,9 @@ class YearPanelModel(QObject):
                         self._slabs_info['length'][slab_id],
                         self._slabs_info['width'][slab_id],
                         self._slabs_info['mean_faulting'][slab_id],
-                        self._slab_id_list[slab_id])
+                        self._slab_id_list[slab_id],
+                        self._slabs_info['start_im'][slab_id],
+                        self._slabs_info['end_im'][slab_id])
         self.state_changed_signal.state_changed.emit(state_tuple)
 
         # update the back and next buttons

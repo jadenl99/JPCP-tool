@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QObject, pyqtSlot
 from PyQt5.QtWidgets import QLineEdit
-
+import cv2
+import os
 
 class ToolController(QObject):
     def __init__(self, tool_model, year_controllers):
@@ -81,12 +82,15 @@ class ToolController(QObject):
                 # update index, image path
                 panel_model.slab_id_list_index = 0
                 panel_model.slab_id_list = year_img_list    
-                panel_model.base_img_directory = (
-                    f'{self._tool_model.directory}/{year}/Slabs/{img_type}'
-                )
-                panel_model.img_directory = (
-                    f'{panel_model.base_img_directory}/{year_img_list[0]}.jpg'
-                )
+                panel_model.base_img_directory = os.path.join(
+                    self._tool_model.directory, str(year))
+
+                suffix = None
+                if img_type == 'Range' or img_type == 'Intensity':
+                    suffix = img_type
+                else:
+                    suffix = os.path.join('Slabs', img_type)
+                
 
                 # set states for each CY slab
                 panel_model.primary_states = []
@@ -95,10 +99,15 @@ class ToolController(QObject):
                 panel_model.slabs_info = {
                     'length' : [],
                     'width' : [],
-                    'mean_faulting': []
+                    'mean_faulting': [],
+                    'start_im': [],
+                    'end_im': []
                 }
-
+                
                 panel_model.populate_slab_info()
+                panel_model.img_directory = os.path.join(
+                    panel_model.base_img_directory, suffix
+                    )
 
 
         self._tool_model.replaced_year = reg_data[by_slab_id - first_BY_index]['replaced']
@@ -121,17 +130,23 @@ class ToolController(QObject):
 
         for panel_model in self._tool_model.year_panel_models.values():
             if not panel_model.lock_panel:
-                last_slash_index = panel_model.base_img_directory.rfind('/')
-                panel_model.base_img_directory = (
-                    panel_model.base_img_directory[:last_slash_index]
-                    + f'/{img_type}'
-                )
-                index = panel_model.slab_id_list_index
-                panel_model.img_directory = (
-                    f'{panel_model.base_img_directory}/'
-                    f'{panel_model.slab_id_list[index]}.jpg'
-                )
-            
+                # last_slash_index = panel_model.base_img_directory.rfind('/')
+                # panel_model.base_img_directory = (
+                #     panel_model.base_img_directory[:last_slash_index]
+                #     + f'/{img_type}'
+                # )
+                suffix = None
+                if img_type == 'Range' or img_type == 'Intensity':
+                    suffix = img_type
+                else:
+                    suffix = os.path.join('Slabs', img_type)
+                panel_model.img_directory = os.path.join(
+                    panel_model.base_img_directory, suffix
+                    )
+    
+
+    
+
 
 
 

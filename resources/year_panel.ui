@@ -513,10 +513,20 @@ QToolButton:enabled:hover {
         </size>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="2" column="0">
-         <widget class="QLabel" name="faulting_lbl">
+        <item row="0" column="1">
+         <widget class="QLabel" name="width_lbl">
           <property name="text">
-           <string>Average Faulting:</string>
+           <string>Width:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="cy_index_lbl">
+          <property name="text">
+           <string>CY Slab Index:</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -533,20 +543,30 @@ QToolButton:enabled:hover {
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="width_lbl">
+        <item row="2" column="0">
+         <widget class="QLabel" name="faulting_lbl">
           <property name="text">
-           <string>Width:</string>
+           <string>Average Faulting:</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="cy_index_lbl">
+        <item row="3" column="0">
+         <widget class="QLabel" name="start_im_lbl">
           <property name="text">
-           <string>CY Slab Index:</string>
+           <string>Start Image: </string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="end_im_lbl">
+          <property name="text">
+           <string>End Image:</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>

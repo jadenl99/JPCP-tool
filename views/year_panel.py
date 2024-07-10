@@ -59,15 +59,14 @@ class YearPanel(QWidget):
         
     @pyqtSlot(str)
     def on_BY_slab_changed(self, slab_dir):
-        if slab_dir == "":
-            self.slab_img.setText("No slab image for the year")
-        elif not os.path.exists(slab_dir):
-            self.slab_img.setText("Slab Image Not Found")
-        else:
-            img = QPixmap(slab_dir).scaled(330, 600, 1, 0)
+        try:
+            img = self._year_panel_controller.get_slab_image()
+            img = img.scaled(330, 500, 1, 0)
             self.slab_img.setPixmap(img)
+        except Exception as e:
+            self.slab_img.setText(str(e))
+            
 
-    
     @pyqtSlot(bool)
     def on_lock_panel_changed(self, lock):
         """If the lock is on, the panel is disabled. If the lock is off, the
@@ -121,12 +120,13 @@ class YearPanel(QWidget):
         faulting.
 
         Args:
-            state_tuple (tuple[str, str, str, float, float, float, int]): tuple 
-            containing the primary state, secondary state, special state, 
-            length, width, average faulting of slab, and CY index
+            state_tuple (tuple[str, str, str, float, float, float, int, int, 
+            int]): tuple containing the primary state, secondary state, special 
+            state, length, width, average faulting of slab, CY index, start im, 
+            end im
         """
         primary_state, secondary_state, special_state, length, width, \
-        avg_faulting, cy_index = state_tuple
+        avg_faulting, cy_index, start_im, end_im = state_tuple
 
         for btn in self.state_btn_group.buttons():
             btn.setIcon(QIcon())
@@ -157,3 +157,5 @@ class YearPanel(QWidget):
         self.width_lbl.setText(width_txt)
         self.faulting_lbl.setText(faulting_txt)
         self.cy_index_lbl.setText(f'CY Index: {cy_index}')   
+        self.start_im_lbl.setText(f'Start Image: {start_im}')
+        self.end_im_lbl.setText(f'End Image: {end_im}')
