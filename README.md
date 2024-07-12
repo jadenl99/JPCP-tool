@@ -63,7 +63,7 @@ There is no input necessary, other than the info to fill out for the slab regist
 ### Output 
 Registration data will be stored in the database. 
 ### Instructions for Running 
-* On the root, top level directory, run `python app.py`. Fill out the form on the top. For the `select directory`, select your `<data>` folder. Then navigate to the slab registration panel and fill out the form. Wait for registration to complete, then close and rerun the application to move on to the slab classification phase (this is necessary to trigger an update).
+* On the root, top level directory, run `python app.py`. Fill out the form on the top. For the `select directory`, select your `<data>` folder. Then navigate to the slab registration panel by clicking the menu button on the top left and fill out the form. Wait for registration to complete, then close and rerun the application to move on to the slab classification phase (this is necessary to trigger an update).
 
 ## Step 4: Slab Classification
 ### Setting up the File System
@@ -90,6 +90,8 @@ There is no output. Run the slab registration algorithm again to get the spreads
 In the root directory, run `python app.py`. A main menu should pop up. When choosing the directory, choose the `<data>` folder (refer to the section on setting up the file system). Then choose a registration to annotate. After submitting the form, if parameters are valid, the main annotation tool will pop up. Progress will save along the way, so the app can safely be closed and reopened again. A save occurs when you navigate to the next/previous slab. After you are done annotating, go back to the slab registration step to produce the final spreadsheet.  
 ### Tips 
 There are shortcuts available to toggle Range and Intensity images. Press `CTRL + R` to display Range images, and `CTRL + I` to display the Intensity images. Other shortcuts: 
+* `CTRL + SHIFT + I` to display the uncropped intensity images
+* `CTRL + SHIFT + R` to to display the uncropped range images
 * `ALT + ->` to go to the next images
 * `ALT + <-` to go to the previous images 
 * `SHIFT + click on state button` to toggle from that year onward              
