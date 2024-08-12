@@ -24,7 +24,7 @@ class YearPanelController(QObject):
             model.slab_id_list_index += 1  
         else:
             model.slab_id_list_index -= 1
-        self._year_panel_model.ImageSignal.image_changed.emit(
+        self._year_panel_model.image_signal.image_changed.emit(
             self._year_panel_model.img_directory)
         self._year_panel_model.refresh_CY_slab_info()
 

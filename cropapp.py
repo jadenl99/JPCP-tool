@@ -76,8 +76,13 @@ if __name__ == '__main__':
                         required=True,
                         help='Interstate of data (eg. I16WB)')
     
+    parser.add_argument('--overwrite',
+                        default=False,
+                        action='store_true',
+                        help='delete segment entries in database before running')
+    
 
-    func, dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate = list(vars(parser.parse_args()).values())
+    func, dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate, overwrite = list(vars(parser.parse_args()).values())
     begin_MM = int(begin_MM)
     end_MM = int(end_MM)
     year = int(year)
@@ -106,4 +111,6 @@ if __name__ == '__main__':
     v_only = False
     if func == "validation-only":
         v_only = True
-    CropSlabsCVAT(dir, pxh, pxw, mmh, mmw, mode, begin_MM, end_MM, year, interstate, SlabInventory(), v_only)
+    CropSlabsCVAT(dir, pxh, pxw, mmh, mmw, mode, 
+                  begin_MM, end_MM, year, interstate, 
+                  SlabInventory(), overwrite, v_only)

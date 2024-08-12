@@ -6,7 +6,7 @@ class OverlapType(Enum):
     FULL_OVERLAP = 1
     BASE_MAJORITY_OVERLAP = 2
     CURRENT_MAJORITY_OVERLAP = 3
-    MINOR_OVERLAP = 4
+    MINOR_OVERLAP = 4   
 
 class AlignmentType(Enum):
     """Enum to specify the type of replacement done based on the alignment of 

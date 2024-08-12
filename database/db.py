@@ -42,7 +42,7 @@ class SlabInventory():
             year (int): year of the slab to update
             slab_index (int): slab index of the slab to update
             update_data (dict): data to update the slab with
-            seg_str (str): segment string 
+            seg_str (str): segment string in the format "Ixx_MMxx_MMxx"
         """
         seg_yr_id = f"{seg_str}_{year}"
         self.requests.append(
@@ -50,7 +50,24 @@ class SlabInventory():
                 {"slab_index": slab_index, "seg_year_id": seg_yr_id},
                 {"$set": update_data}
                 )
-            ) 
+            )
+
+
+    def upsert_slab_entry(self, year, slab_index, update_data, seg_str):
+        """Updates or inserts a slab entry in the database
+
+        Args:
+            year (int): year of the slab
+            slab_index (int): slab index of the slab
+            update_data (dict): data to update the slab with
+            seg_str (str): segment string in the format "Ixx_MMxx_MMxx"
+        """
+        seg_yr_id = f"{seg_str}_{year}"
+        self.slab_collection.update_one(
+            {"slab_index": slab_index, "seg_year_id": seg_yr_id},
+            {"$set": update_data},
+            upsert=True
+        ) 
         
     
     def fetch_slab(self, year, slab_index, seg_str):
@@ -247,9 +264,16 @@ class SlabInventory():
                          positive_faulting: float, z1_median: float,
                          z2_median: float, z3_median: float, z4_median: float,
                          z5_median: float):
-        entry = {
+        """Performs an insert or update operation on the slab collection
+
+        """
+        query = {
             'seg_year_id': f'{seg_str}_{year}',
-            'slab_index': slab_index,
+            'slab_index': slab_index
+        }
+        entry = {
+            #'seg_year_id': f'{seg_str}_{year}',
+            # 'slab_index': slab_index,
             'length': length,
             'width': width,
             'start_im': start_im,
@@ -279,20 +303,7 @@ class SlabInventory():
             'secondary_state': None,
             'special_state': None
         }
-        self.slab_collection.insert_one(entry)
+        self.slab_collection.update_one(query, {'$set': entry}, upsert=True)
+        #self.slab_collection.insert_one(entry)
 
 
-
-    # def update_offsets(self, seg_str: str, year: int, shift: float):
-    #     """Updates the y_offset for all slabs in a year
-
-    #     Args:
-    #         seg_str (str): The segment string
-    #         year (int): The year to update the offsets for
-    #         shift (float): The amount to shift the slabs by
-    #     """
-    #     seg_year_id = f'{seg_str}_{year}'
-    #     self.slab_collection.update_many(
-    #         {'seg_year_id': seg_year_id},
-    #         {'$inc': {'y_offset': shift}}
-    #     )

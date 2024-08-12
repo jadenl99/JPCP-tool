@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 
-def nn_interpolate(arr: np.array):
+def nn_interpolate(arr: np.array, first_index, last_index):
     """Interpolates the NaN values in the array using the nearest neighbors
     method.
 
@@ -29,6 +29,8 @@ def nn_interpolate(arr: np.array):
     T_val = arr_copy[valid_indices]
     nn = interp1d(t_val, T_val, kind='nearest', fill_value='extrapolate')
     interp_val = nn(t)
+    interp_val[0:first_index] = np.nan
+    interp_val[last_index+1:] = np.nan
     return interp_val
 
    
@@ -75,8 +77,8 @@ def mask_outliers(arr: np.array):
     mask = np.logical_or(arr > 9998, arr < -9998)
     arr_copy[mask] = np.nan
     if np.all(mask):
-        return arr_copy
-    
+        return arr_copy, 0, 0
+    first_index, last_index = np.where(~mask)[0][[0, -1]]
     q1 = np.nanpercentile(arr_copy, 25)
     q3 = np.nanpercentile(arr_copy, 75)
     iqr = q3 - q1
@@ -84,7 +86,7 @@ def mask_outliers(arr: np.array):
     upper_bound = q3 + 1.5 * iqr
     mask = np.logical_or(arr <= lower_bound, arr >= upper_bound, np.isnan(arr))
     arr_copy[mask] = np.nan
-    return arr_copy
+    return arr_copy, first_index, last_index
 
 
 def find_subjoints_in_range(fault_vals: list[dict[float, float]], 
@@ -147,8 +149,8 @@ def find_subjoints_in_range_filtered(fault_vals: list[dict[float, float]],
         except:
             raise ValueError('Faulting values are not in the correct format.')
         
-        filtered_entries = mask_outliers(entries)
-        filtered_entries = list(nn_interpolate(filtered_entries))
+        filtered_entries, first_index, last_index = mask_outliers(entries)
+        filtered_entries = list(nn_interpolate(filtered_entries, first_index, last_index))
         return [{'x_val': x_vals[i], 'data': filtered_entries[i]} for 
                 i in range(len(filtered_entries))]
 
@@ -273,32 +275,40 @@ def generate_filtered_entries(arr: np.array):
         arr = arr.astype(float)
     except ValueError:
         raise ValueError("Array cannot be converted to float")
-    filtered_arr = mask_outliers(arr)
+    filtered_arr, first_index, last_index = mask_outliers(arr)
     if np.all(np.isnan(filtered_arr)):
         return None
-    filtered_arr = nn_interpolate(filtered_arr)
+    filtered_arr = nn_interpolate(filtered_arr, first_index, last_index)
     
-
     return filtered_arr
 
 
-def zone_boundaries(width: int=3658):
+def zone_boundaries(width: int=3658, buffer: int=300):
     """Returns the boundaries of each zone in the slab.
 
     Args:
         width (int, optional): Assumed width of each slab. Defaults to 3658.
+        buffer (int, optional): Buffer to be used for the calculation. The
+        buffer is essentialy the width of zone 1 or zone 5. Defaults to 300.
 
     Returns:
         tuple: Tuple containing the boundaries of each zone. tuple[0] represents
         the boundary between zones 1 and 2, tuple[1] represents the boundary
         between zones 2 and 3, tuple[2] represents the boundary between zones
         3 and 4, and tuple[3] represents the boundary between zones 4 and 5.
+    
+    Raises:
+        ValueError: If the buffer is too large for the width of the slab
     """
-    buffer = (width - 2750) / 2
+    # Assumption: wheelpath is 450 mm wide
+    wheelpath_width = 450
+    if 2 * buffer > width - wheelpath_width * 2:
+        raise ValueError("Buffer is too large for the width of the slab")
+    zone3_width = width - 2 * buffer - 2 * wheelpath_width
     zone12 = buffer
-    zone23 = buffer + 1000
-    zone34 = buffer + 1750
-    zone45 = buffer + 2750
+    zone23 = zone12 + wheelpath_width
+    zone34 = zone23 + zone3_width
+    zone45 = zone34 + wheelpath_width
     
     return zone12, zone23, zone34, zone45
 
@@ -356,8 +366,8 @@ def percent_positive(arr: np.ndarray):
     except ValueError:
         raise ValueError("Array cannot be converted to float")
 
-    filtered_arr = mask_outliers(arr)
-    filtered_arr = nn_interpolate(filtered_arr)
+    filtered_arr, first_index, last_index = mask_outliers(arr)
+    filtered_arr = nn_interpolate(filtered_arr, first_index, last_index)
     if np.all(np.isnan(filtered_arr)):
         return None
     return np.sum(filtered_arr > 0) / float(len(filtered_arr))
