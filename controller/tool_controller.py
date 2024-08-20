@@ -96,6 +96,7 @@ class ToolController(QObject):
                 panel_model.primary_states = []
                 panel_model.secondary_states = []
                 panel_model.special_states = []
+                panel_model.intensity_replaced = []
                 panel_model.slabs_info = {
                     'length' : [],
                     'width' : [],

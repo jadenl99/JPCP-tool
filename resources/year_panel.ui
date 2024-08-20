@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>753</width>
-    <height>877</height>
+    <width>757</width>
+    <height>886</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -641,6 +641,19 @@ QToolButton:enabled:hover {
          </property>
          <property name="text">
           <string>Replaced?</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="replaced_intensity_box">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Intensity Replaced?</string>
          </property>
         </widget>
        </item>

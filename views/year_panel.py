@@ -120,12 +120,12 @@ class YearPanel(QWidget):
         faulting.
 
         Args:
-            state_tuple (tuple[str, str, str, float, float, float, int, int, 
+            state_tuple (tuple[str, str, str, str, float, float, float, int, int, 
             int]): tuple containing the primary state, secondary state, special 
-            state, length, width, average faulting of slab, CY index, start im, 
+            state, intensity replaced, length, width, average faulting of slab, CY index, start im, 
             end im
         """
-        primary_state, secondary_state, special_state, length, width, \
+        primary_state, secondary_state, special_state, intensity_replaced, length, width, \
         avg_faulting, cy_index, start_im, end_im = state_tuple
 
         for btn in self.state_btn_group.buttons():
@@ -143,6 +143,10 @@ class YearPanel(QWidget):
         else:
             self.replaced_box.setChecked(False)
         
+        if intensity_replaced == 'R':
+            self.replaced_intensity_box.setChecked(True)
+        else:
+            self.replaced_intensity_box.setChecked(False)
         
         faulting_txt = f'Average Faulting: {avg_faulting:.2f}' if avg_faulting \
             else 'Average Faulting: N/A'

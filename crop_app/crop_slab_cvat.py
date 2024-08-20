@@ -92,37 +92,8 @@ class CropSlabsCVAT:
             avg_width = 0 if count == 0 else sum_m / count
             self.slab_inventory.add_crack_stats(i, total_length, avg_width, 
                                             self.seg_str, self.year)
-        # with concurrent.futures.ThreadPoolExecutor() as executor:
-        #     futures = [executor.submit(self.task, img_path, i) for i in range(1, num_files + 1)]
-        #     for future in concurrent.futures.as_completed(futures):
-        #         future.result()   
+
         
-            
-    
-
-    # def task(self, img_path, img_num):
-    #     print(f'Processing image {img_num}')
-    #     p = os.path.join(img_path, f'{str(img_num)}.jpg')
-    #     builder = CvmBuilder()
-    #     builder.use_seg_img_path(p)
-    #     model = builder.build()
-    #     total_length = sum(model.branches_length)
-    #     widths = model.branches_width
-    #     sum_m = 0
-    #     count = 0
-    #     for width in widths:
-    #         for w in width:
-    #             sum_m += w
-    #             count += 1
-    #     avg_width = 0 if count == 0 else sum_m / count
-    #     self.slab_inventory.add_crack_stats(img_num, total_length, avg_width, 
-    #                                         self.seg_str, self.year)
-
-    #     print(f'Finished processing image {img_num}')
-        
-
-            
-
     def crop(self):
         """Algorithm to crop slabs from the dataset. 
         """

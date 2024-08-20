@@ -157,7 +157,7 @@ def sort_by_number(filename):
 
 
 
-dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output_intensity//" # Change this to the directory of the range images
+dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output_range//" # Change this to the directory of the range images
 dir_list = os.listdir(dir)
 dir_list.sort(key=sort_by_number, reverse=True)
 for filename in dir_list:
@@ -165,11 +165,18 @@ for filename in dir_list:
     if number >= 1536:
         os.rename(dir + filename, dir + str(number + 4) + '.jpg')
 
-dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output_range//" # Change this to the directory of the 2013 intensity images
+dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output_intensity//" # Change this to the directory of the 2013 intensity images
 for filename in dir_list:
     number = int(filename.split('.')[0])
     if number >= 1536:
-        os.rename(dir + filename, dir + str(number + 4) + '.jpg')                   
+        os.rename(dir + filename, dir + str(number + 4) + '.jpg')           
+
+
+dir = "C://Users//jaden//Documents//GitHub//JPCP-tool//data//2013//Slabs//output_segmentation//" # Change this to the directory of the 2013 intensity images
+for filename in dir_list:
+    number = int(filename.split('.')[0])
+    if number >= 1536:
+        os.rename(dir + filename, dir + str(number + 4) + '.jpg')            
 
 
 print("Successfully updated the database.")
