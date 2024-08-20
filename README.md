@@ -52,6 +52,7 @@ In the specified `<year>` folder, a `Slabs` folder will be created/overriden wit
 * Run `python cropapp.py -f crop-slabs -d <path-to-data> -b <beginMM> -e <endMM> -i <interstate> -y <year> --mode range intensity`. The interstate argument should be formated like `I16WB`, include direction as well. Run this for each year in the segment.
   * If you only want to crop the range or intensity, drop `range` or `intensity`.
 * If you only want to validate the joints are correctly annotated, run the function `-f validation-only` instead. Note that the check for the joints is not comprehensive. 
+* By default, an upsert is done (so if record exists, it will update the fields of the entry and not overwrite slab annotations). If you want to completely drop all previous entries for the particular segment for the particular year, add the `--overwrite` flag. 
 ### Including Segmentation Images and Crack Length for Each Slab
 * Run the `predict_folder.py` script in the `DL_Crack_Segmentation` repository (seperate from this application) and name the output folder `Segmentation` to be used as input later.
 * To the `--mode` argument in the command line to run the crop app, add `segmentation`.

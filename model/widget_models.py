@@ -85,6 +85,9 @@ class RegistrationModel(QObject):
         self._years_selected = {}
         self._by_selected = None
         self._faulting_mode = 'average'
+        self._include_replaced = False
+        self._include_intensity_replaced = False
+        self._ratio = 0.5
 
 
     def construct_years_list(self):
@@ -142,6 +145,35 @@ class RegistrationModel(QObject):
     @faulting_mode.setter
     def faulting_mode(self, faulting_mode):
         self._faulting_mode = faulting_mode
-        
+    
+
+    @property 
+    def include_replaced(self):
+        return self._include_replaced
+    
+
+    @include_replaced.setter
+    def include_replaced(self, include_replaced):
+        self._include_replaced = include_replaced
+
+    
+    @property
+    def include_intensity_replaced(self):
+        return self._include_intensity_replaced
+    
+
+    @include_intensity_replaced.setter
+    def include_intensity_replaced(self, include_intensity_replaced):
+        self._include_intensity_replaced = include_intensity_replaced
+
+
+    @property
+    def ratio(self):
+        return self._ratio
+
+
+    @ratio.setter
+    def ratio(self, ratio):
+        self._ratio = ratio
 
     

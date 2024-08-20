@@ -34,7 +34,7 @@ class SubJoint:
         if (self.x1 == self.x2) and (self.y1 == self.y2):
             raise ValueError("Subjoint cannot have zero length.")
         
-        if dist is None:
+        if not dist:
             dist = math.hypot(self.x2 - self.x1, self.y2 - self.y1)
             dist = round(dist, 2)
         

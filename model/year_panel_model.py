@@ -66,6 +66,7 @@ class YearPanelModel(QObject):
         self._primary_states = None
         self._secondary_states = None
         self._special_states = None
+        self._intensity_replaced = None
         self._slabs_info = None
         self._seg_str = seg_str
 
@@ -148,6 +149,16 @@ class YearPanelModel(QObject):
     
 
     @property
+    def intensity_replaced(self):
+        return self._intensity_replaced
+
+
+    @intensity_replaced.setter
+    def intensity_replaced(self, intensity_replaced):
+        self._intensity_replaced = intensity_replaced
+
+
+    @property
     def slabs_info(self):
         return self._slabs_info
     
@@ -191,6 +202,10 @@ class YearPanelModel(QObject):
             self._primary_states.append(slab_data['primary_state'])
             self._secondary_states.append(slab_data['secondary_state'])
             self._special_states.append(slab_data['special_state'])
+            if 'intensity_replaced' not in slab_data:
+                self._intensity_replaced.append(None)
+            else:
+                self._intensity_replaced.append(slab_data['intensity_replaced'])
             if slab_data['length'] is None:
                 self._slabs_info['length'].append(None)
             else:
@@ -210,9 +225,11 @@ class YearPanelModel(QObject):
         """Updates state information about the current slab id.  
         """
         slab_id = self._slab_id_list_index
+        print(slab_id)
         state_tuple = (self._primary_states[slab_id], 
                         self._secondary_states[slab_id],
                         self._special_states[slab_id],
+                        self._intensity_replaced[slab_id],
                         self._slabs_info['length'][slab_id],
                         self._slabs_info['width'][slab_id],
                         self._slabs_info['mean_faulting'][slab_id],
@@ -245,7 +262,8 @@ class YearPanelModel(QObject):
                     {
                         'primary_state': self._primary_states[i],
                         'secondary_state': self._secondary_states[i],
-                        'special_state': self._special_states[i]
+                        'special_state': self._special_states[i],
+                        'intensity_replaced': self._intensity_replaced[i]
                     },
                     seg_str
                 )

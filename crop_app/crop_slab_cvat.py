@@ -18,15 +18,13 @@ from utils.px_mm_converter import PXMMConverter
 import numpy as np
 import crop_app.fault_calc as fc
 from cvm import CvmBuilder
-import matplotlib
-#matplotlib.use('Agg')
-import concurrent.futures
+
 class CropSlabsCVAT:
     def __init__(self, data_path, 
                  px_height, px_width, 
                  mm_height, mm_width,
                  mode, begin_MM, end_MM, year, interstate, 
-                 slab_inventory, validation_only=False):
+                 slab_inventory, overwrite, validation_only=False):
         # filepath of the dataset
         self.seg_str = f"{interstate}_MM{begin_MM}_MM{end_MM}"
         self.year = year
@@ -54,7 +52,7 @@ class CropSlabsCVAT:
                 self.scaler = PXMMConverter(self.px_height, self.px_width, 
                                             self.mm_height, self.mm_width,
                                             len(self.file_manager.input_im_files))
-            if not self.recorded and not self.validation_only:
+            if not self.recorded and not self.validation_only and overwrite:
                 self.slab_inventory.delete_segment_year_slabs(
                     self.seg_str, year
                     )
@@ -94,37 +92,8 @@ class CropSlabsCVAT:
             avg_width = 0 if count == 0 else sum_m / count
             self.slab_inventory.add_crack_stats(i, total_length, avg_width, 
                                             self.seg_str, self.year)
-        # with concurrent.futures.ThreadPoolExecutor() as executor:
-        #     futures = [executor.submit(self.task, img_path, i) for i in range(1, num_files + 1)]
-        #     for future in concurrent.futures.as_completed(futures):
-        #         future.result()   
+
         
-            
-    
-
-    # def task(self, img_path, img_num):
-    #     print(f'Processing image {img_num}')
-    #     p = os.path.join(img_path, f'{str(img_num)}.jpg')
-    #     builder = CvmBuilder()
-    #     builder.use_seg_img_path(p)
-    #     model = builder.build()
-    #     total_length = sum(model.branches_length)
-    #     widths = model.branches_width
-    #     sum_m = 0
-    #     count = 0
-    #     for width in widths:
-    #         for w in width:
-    #             sum_m += w
-    #             count += 1
-    #     avg_width = 0 if count == 0 else sum_m / count
-    #     self.slab_inventory.add_crack_stats(img_num, total_length, avg_width, 
-    #                                         self.seg_str, self.year)
-
-    #     print(f'Finished processing image {img_num}')
-        
-
-            
-
     def crop(self):
         """Algorithm to crop slabs from the dataset. 
         """
@@ -446,17 +415,28 @@ class CropSlabsCVAT:
             z4_median = None
             z5_median = None
             if filtered_faulting_vals is not None: 
-                mean_faulting = np.mean(np.abs(filtered_faulting_vals))
-                std_faulting = np.std(filtered_faulting_vals)
-                percentile95_faulting = np.percentile(filtered_faulting_vals, 95) 
-                median_faulting = np.median(np.abs(filtered_faulting_vals))
+                mean_faulting = np.nanmean(np.abs(filtered_faulting_vals))
+                std_faulting = np.nanstd(filtered_faulting_vals)
+                percentile95_faulting = np.nanpercentile(filtered_faulting_vals, 95) 
+                median_faulting = np.nanmedian(np.abs(filtered_faulting_vals))
                 percentage_positive = fc.percent_positive(np.array(faulting_vals))
                 zones = fc.zone_data(x_registered_vals, filtered_faulting_vals)
-                z1_median = np.median(np.abs(zones[0]))
-                z2_median = np.median(np.abs(zones[1]))
-                z3_median = np.median(np.abs(zones[2]))
-                z4_median = np.median(np.abs(zones[3]))
-                z5_median = np.median(np.abs(zones[4]))
+                z1_median = np.nanmedian(np.abs(zones[0]))
+                z2_median = np.nanmedian(np.abs(zones[1]))
+                z3_median = np.nanmedian(np.abs(zones[2]))
+                z4_median = np.nanmedian(np.abs(zones[3]))
+                z5_median = np.nanmedian(np.abs(zones[4]))
+            if z1_median is not None and np.isnan(z1_median):
+                z1_median = None
+            if z2_median is not None and np.isnan(z2_median):
+                z2_median = None
+            if z3_median is not None and np.isnan(z3_median):
+                z3_median = None
+            if z4_median is not None and np.isnan(z4_median):
+                z4_median = None
+            if z5_median is not None and np.isnan(z5_median):
+                z5_median = None
+            
                     
             if mean_faulting:
                 mean_faulting = round(mean_faulting, 4)
@@ -469,6 +449,8 @@ class CropSlabsCVAT:
             if percentage_positive:
                 percentage_positive = round(percentage_positive, 4)
             filtered_faulting_vals = filtered_faulting_vals.tolist() if filtered_faulting_vals is not None else None
+            if filtered_faulting_vals:
+                filtered_faulting_vals = [None if np.isnan(val) else val for val in filtered_faulting_vals]
             
             
             

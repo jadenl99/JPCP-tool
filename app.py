@@ -61,7 +61,10 @@ class App(QApplication):
             self.registration_model.faulting_mode,
             self.registration_model.by_selected,
             years_selected,
-            start_bys
+            start_bys,
+            self.registration_model.include_replaced,
+            self.registration_model.include_intensity_replaced,
+            float(self.registration_model.ratio)
             )
         
         # move the registration script to a separate thread so GUI remains

@@ -24,7 +24,7 @@ class YearPanelController(QObject):
             model.slab_id_list_index += 1  
         else:
             model.slab_id_list_index -= 1
-        self._year_panel_model.ImageSignal.image_changed.emit(
+        self._year_panel_model.image_signal.image_changed.emit(
             self._year_panel_model.img_directory)
         self._year_panel_model.refresh_CY_slab_info()
 
@@ -73,6 +73,23 @@ class YearPanelController(QObject):
             self._year_panel_model.special_states[index] = 'R'
         else:
             self._year_panel_model.special_states[index] = None
+        self._year_panel_model.panel_updated = True
+
+    
+    @pyqtSlot(bool)
+    def change_replaced_intensity_info(self, is_replaced):
+        """Changes the replaced state of the slab in the model
+
+        Args:
+            is_replaced (bool): whether the slab is replaced or not
+        """
+        pass
+        
+        index = self._year_panel_model.slab_id_list_index
+        if is_replaced:
+            self._year_panel_model.intensity_replaced[index] = 'R'
+        else:
+            self._year_panel_model.intensity_replaced[index] = None
         self._year_panel_model.panel_updated = True
     
 

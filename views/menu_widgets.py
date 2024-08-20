@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QAction,
                              QMenu, QFileDialog, QPushButton, QWidget, QLabel,
                              QWidget, QComboBox, QCheckBox, QRadioButton,
                              QButtonGroup, QAbstractButton, QLineEdit)
-from PyQt5.QtGui import QPalette, QColor, QIntValidator
+from PyQt5.QtGui import QPalette, QColor, QIntValidator, QDoubleValidator
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal
 from PyQt5.uic import loadUi
@@ -74,10 +74,21 @@ class RegistrationMenu(QWidget):
         self.faulting_btn_group = QButtonGroup()
         self.faulting_btn_group.addButton(self.avg_btn, 1)
         self.faulting_btn_group.addButton(self.most_btn, 2) 
+
+
+        self.replaced_btn_group = QButtonGroup()
+        self.replaced_btn_group.addButton(self.auto_check, 1)
+        self.replaced_btn_group.addButton(self.intensity_check, 2)
+        self.replaced_btn_group.setExclusive(False)
+
         self.by_select.setLayout(QVBoxLayout())   
         self.year_select.setLayout(QVBoxLayout())
         self.id_select.setLayout(QVBoxLayout()) 
-        
+        validate_ratio = QDoubleValidator()
+        #validate_ratio.setRange(0.01, 1, 2)
+        self.ratio_line_edit.setValidator(validate_ratio)
+        self.ratio_line_edit.editingFinished.connect(self.on_ratio_edited)
+
         self._registration_model.years_changed.connect(
             self.populate_years_selector    
         )
@@ -86,6 +97,10 @@ class RegistrationMenu(QWidget):
         self.by_btn_group.buttonClicked.connect(self.on_by_selected)
         self.faulting_btn_group.buttonClicked.connect(
             self.on_faulting_selected
+        )
+
+        self.replaced_btn_group.buttonClicked.connect(
+            self.on_replaced_selected
         )
         self.submit_btn.clicked.connect(
             self._registration_controller.submit
@@ -103,7 +118,8 @@ class RegistrationMenu(QWidget):
         year_select_layout = self.year_select.layout()
         by_select_layout = self.by_select.layout()
         id_select_layout = self.id_select.layout()
-        self._id_text_edits = {}    
+        self._id_text_edits = {}  
+          
         for i, year in enumerate(years):
             year_checkbox = QCheckBox(str(year))
             year_radio_btn = QRadioButton(str(year))
@@ -148,6 +164,19 @@ class RegistrationMenu(QWidget):
             by_btn.setEnabled(False)
             
     
+    def on_ratio_edited(self):
+        """Update the ratio when the user edits it
+        """
+        if (self.ratio_line_edit.text() == '' 
+            or self.ratio_line_edit.text() == '.'
+            or float(self.ratio_line_edit.text()) > 1
+            ):
+            self.ratio_line_edit.setText('0.5')
+        self._registration_controller.update_ratio(
+            self.ratio_line_edit.text()
+        )
+
+        
     @pyqtSlot(QAbstractButton)
     def on_by_selected(self, btn):
         """Update the BY selected
@@ -169,6 +198,15 @@ class RegistrationMenu(QWidget):
         self._registration_controller.update_faulting_mode(
             self.faulting_btn_group.id(btn)
         )
+
+
+    def on_replaced_selected(self, btn):   
+        """Update the replaced annotations to use
+        """
+        self._registration_controller.update_replaced(
+            self.replaced_btn_group.id(btn)
+        )
+
 
 
     def on_id_text_edited(self):

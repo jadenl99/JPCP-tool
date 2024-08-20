@@ -1,6 +1,6 @@
 import argparse
 import os
-from pre_cvat.parser import XML_CVAT_Parser
+from data_pipeline.pre_cvat.parser import XML_CVAT_Parser
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Generate CVAT XML files so annotations from the crack digitizer can be loaded' 

@@ -7,27 +7,24 @@ from registration import overlap
 from registration.overlap import OverlapType, AlignmentType
 from PyQt5.QtCore import QObject, pyqtSignal
 
-MEMBERSHIP_THRESHOLD = 0.5
-
-# determines if BY/CY pair has joint alignment
-JOINT_THRESHOLD = 400
-
-# Percentage of BY slab length that must be replaced to count as an R slab
-REPLACED_THRESHOLD = 0.25
-
-
-
-        
 class SlabRegistration(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     progress_max = pyqtSignal(int)
-    reset_progress = pyqtSignal()   
+    reset_progress = pyqtSignal()  
+    
     def __init__(self, slab_inventory, seg_str: str, data_dir: str, mode: str,
-                 by: int, years: list, first_slabs: list):
+                 by: int, years: list, first_slabs: list, 
+                 include_replaced=True, include_intensity_replaced=False,
+                 ratio: float = 0.5):
         super().__init__()
         self.slab_inventory = slab_inventory
-        
+        self.MEMBERSHIP_THRESHOLD = ratio
+        # Percentage of BY slab length that must be replaced to count as an R slab
+        self.REPLACED_THRESHOLD = ratio
+        #print(ratio)
+        # determines if BY/CY pair has joint alignment
+        self.JOINT_THRESHOLD = 400 
         self.minslablength = 100
         self.data_dir = data_dir
         self.possiblyor = 2
@@ -38,7 +35,8 @@ class SlabRegistration(QObject):
         self.first_slabs = first_slabs
         self.by = by
         self.mode = mode
-        self.prompt_input()
+        self.include_replaced = include_replaced
+        self.include_intensity_replaced = include_intensity_replaced
         by_start_slab = self.first_slabs[self.years.index(self.by)]
         self.by_slabs = list(self.slab_inventory.get_year_slab_data(seg_str,
             self.by, by_start_slab))
@@ -64,7 +62,6 @@ class SlabRegistration(QObject):
         self.slab_inventory.create_registration_entry(self.seg_str, self.by, 
                                                       self.years)
         for year, first_slab in zip(self.years, self.first_slabs):
-            # self.align_year(year, first_slab)
             if year != self.by: 
                 self.categorize_by_length(year, first_slab)
         self.slab_inventory.update_registration_data(self.reg_data, 
@@ -72,58 +69,18 @@ class SlabRegistration(QObject):
                                                      self.by, 
                                                      self.years)
         if self.mode == 'single':
-            self.build_single_spreadsheet()
+            self.build_single_spreadsheet(
+                avg_faulting=False,
+                include_replaced=self.include_replaced,
+                include_intensity_replaced=self.include_intensity_replaced
+                )
         else:
-            self.build_single_spreadsheet(avg_faulting=True)
+            self.build_single_spreadsheet(
+                avg_faulting=True,
+                include_replaced=self.include_replaced,
+                include_intensity_replaced=self.include_intensity_replaced
+                )
         self.finished.emit()
-
-
-
-    def prompt_input(self):
-        """Prompts user to input the years they want to register, as well as the
-        base year to align by and the first slab index for each year to align
-        by.
-        """
-        while self.years == None:
-            years_input = input("Enter years from least to greatest, separate "
-                                "them with a comma (ex. 2014, 2015, 2017):\n"
-                                ).split(", ")
-            try: 
-                self.years = [int(x) for x in years_input]
-            except:
-                None
-        
-        while self.by not in self.years:
-            try:
-                self.by = int(input("Enter base year, this should be a year "
-                                    "within the list inputed previously:\n"))
-            except:
-                None
-        
-        while (self.first_slabs == None 
-               or len(self.first_slabs) != len(self.years)):
-            first_slabs_input = input("Enter the first slab index for each "
-                                      "year to align by, separate them with a "
-                                      "comma (ex. 1, 3, 5):\n").split(", ")
-            try:
-                self.first_slabs = [int(x) for x in first_slabs_input]
-            except:
-                None
-
-
-    # def align_year(self, year: int, first_slab: int):
-    #     """Aligns the starting point of the slabs in a year to the starting slab
-    #     specified.
-
-    #     Args:
-    #         year (int): year to align
-    #         first_slab (int): first slab index, its offset will be set to 0 and 
-    #         all other slabs in the year will be adjusted accordingly
-    #     """
-    #     slab_data = self.slab_inventory.get_slab_data(
-    #         year, first_slab, self.seg_str)
-    #     shift = -(slab_data['y_offset'])
-    #     self.writer.update_offsets(year, shift)
 
 
     def categorize_by_length(self, year: int, first_slab: int): 
@@ -149,6 +106,8 @@ class SlabRegistration(QObject):
         exterior = interior = aligned = 0
         new_BY = True
         max_overlap = -1
+        replaced_ratio = 0
+        replaced_slab_length = -1
         while byi < len(self.by_slabs) and cyi < len(cy_slabs):
 
             if byi >= len(self.by_slabs) + 1:
@@ -162,18 +121,18 @@ class SlabRegistration(QObject):
             cy_length = cy_slabs[cyi]['length']
             overlap_type = overlap.belongs_to(0, by_length, 
                                               cy_rel_offset, cy_length, 
-                                              MEMBERSHIP_THRESHOLD)
-
+                                              self.MEMBERSHIP_THRESHOLD)
+            overlap_percentage = overlap.percent_BY_overlap(0, 
+                                                            by_length, 
+                                                            cy_rel_offset, 
+                                                            cy_length)
             # Check membership
             if (overlap_type == OverlapType.FULL_OVERLAP or 
                 overlap_type == OverlapType.BASE_MAJORITY_OVERLAP or
                 overlap_type == OverlapType.CURRENT_MAJORITY_OVERLAP):
                 cy_entries.append(cy_slabs[cyi]['slab_index'])
                 
-                overlap_percentage = overlap.percent_BY_overlap(0, 
-                                                                by_length, 
-                                                                cy_rel_offset, 
-                                                                cy_length)
+                
                 
                 if overlap_percentage > max_overlap:
                     max_overlap = overlap_percentage
@@ -183,34 +142,41 @@ class SlabRegistration(QObject):
 
             if new_BY:
                 # left CY joint out of bounds of BY slab
-                if cy_rel_offset < -JOINT_THRESHOLD:
+                if cy_rel_offset < -self.JOINT_THRESHOLD:
                     exterior += 1
+                    if overlap_percentage > replaced_ratio:
+                        replaced_ratio += overlap_percentage
+                        replaced_slab_length = cy_length
                 # Left CY joint in bounds of BY slab
-                elif cy_rel_offset > JOINT_THRESHOLD:
+                elif cy_rel_offset > self.JOINT_THRESHOLD:
                     interior += 1
                 # Left CY joint aligned with BY slab
                 else:
                     aligned += 1
                 new_BY = False
-
+           
             CY_right = cy_rel_offset + cy_length
             # Right CY joint out of bounds of BY slab
-            if CY_right > by_length + JOINT_THRESHOLD:
+            if CY_right > by_length + self.JOINT_THRESHOLD:
                 exterior += 1
+                if overlap_percentage > replaced_ratio:
+                    replaced_ratio += overlap_percentage
+                    replaced_slab_length = cy_length
             # Right CY joint in bounds of BY slab
-            elif CY_right < by_length - JOINT_THRESHOLD:
+            elif CY_right < by_length - self.JOINT_THRESHOLD:
                 interior += 1
             # Right CY joint aligned with BY slab
             else:
                 aligned += 1
 
-            if by_length < cy_length + cy_rel_offset + JOINT_THRESHOLD:
+            if by_length < cy_length + cy_rel_offset + self.JOINT_THRESHOLD:
                 new_BY = True
                 existing_rep_year = self.reg_data[byi]['replaced']  
                 rep_type = overlap.replacement_type(interior, exterior, aligned,
-                                                    cy_length, by_length, 
-                                                    cy_rel_offset, 
-                                                    REPLACED_THRESHOLD)
+                                                    replaced_slab_length, 
+                                                    replaced_ratio, 
+                                                    self.REPLACED_THRESHOLD)
+                
                 if existing_rep_year:
                     # mark slab as R
                     for index in cy_entries:
@@ -219,7 +185,7 @@ class SlabRegistration(QObject):
                         )
                 if (not existing_rep_year and 
                     rep_type != AlignmentType.FULL_TWO_ALIGN):
-
+                    print(f'BY: {self.by}, byi: {byi}, ratio: {replaced_ratio}, type: {rep_type}')
                     self.reg_data[byi]['replaced_type'] = rep_type.name
                     self.reg_data[byi]['interior'] = interior
                     self.reg_data[byi]['exterior'] = exterior
@@ -234,13 +200,15 @@ class SlabRegistration(QObject):
                             )
                 interior = exterior = aligned = 0
                 max_overlap = -1
+                replaced_ratio = 0
+                replaced_slab_length = -1
                 byi += 1
                 if byi < len(self.by_slabs):
                     self.reg_data[byi][str(year)] = []
                     cy_entries = self.reg_data[byi][str(year)]
 
                 # BY and CY slabs end at same point, also visit next CY slab
-                if abs(by_length - (cy_length + cy_rel_offset)) < JOINT_THRESHOLD:
+                if abs(by_length - (cy_length + cy_rel_offset)) < self.JOINT_THRESHOLD:
                     cy_rel_offset = 0
                     cyi += 1
                 else:
@@ -254,7 +222,8 @@ class SlabRegistration(QObject):
     
 
     def build_single_spreadsheet(self, avg_faulting=False, 
-                                 include_replaced=True):
+                                 include_replaced=True,
+                                 include_intensity_replaced=False):
         """Builds a single spreadsheet with all the registration data. The 
         single associating slab in the CY is the one that has the most overlap
         with the BY slab. If the avg_faulting flag is set to True, then all 
@@ -306,9 +275,19 @@ class SlabRegistration(QObject):
                         yr_id = self.majority_slabs[i][str(year)]
                         yr_slab = self.slab_inventory.fetch_slab(
                             year, yr_id, self.seg_str)
-                        row_dict[f'{year}_state'] = yr_slab['primary_state'] if (
-                            yr_slab['special_state'] != 'R' or not include_replaced) else (
-                            yr_slab['special_state'])
+                        # TODO: Add parameter to show annotated intensity images
+                        if ('intensity_replaced' in yr_slab and (include_intensity_replaced 
+                            and yr_slab['intensity_replaced'] == 'R') or
+                            (include_replaced 
+                            and yr_slab['special_state'] == 'R')):
+                            row_dict[f'{year}_state'] = 'R'
+                        else:
+                            row_dict[f'{year}_state'] = yr_slab['primary_state']
+
+                        
+                        # row_dict[f'{year}_state'] = yr_slab['primary_state'] if (
+                        #     yr_slab['special_state'] != 'R' or not include_replaced) else (
+                        #     yr_slab['special_state'])
                         row_dict[f'{year}_faulting'] = (
                             self.avg_faulting_BY(i, year) if avg_faulting
                             else yr_slab['mean_faulting']

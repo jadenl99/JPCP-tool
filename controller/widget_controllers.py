@@ -98,7 +98,11 @@ class RegistrationController(QObject):
         else:
             self._registration_model.by_selected = None
     
-
+    
+    def update_ratio(self, ratio):
+        self._registration_model.ratio = ratio
+    
+    
     @pyqtSlot(int)
     def update_faulting_mode(self, id):
         if id == 1:
@@ -106,6 +110,14 @@ class RegistrationController(QObject):
         else:
             self._registration_model.faulting_mode = 'single'
 
+
+    @pyqtSlot(int)
+    def update_replaced(self, id):
+        if id == 1:
+            self._registration_model.include_replaced = not self._registration_model.include_replaced
+        else:
+            self._registration_model.include_intensity_replaced = not self._registration_model.include_intensity_replaced
+        
 
     @pyqtSlot(bool)
     def submit(self, b):
