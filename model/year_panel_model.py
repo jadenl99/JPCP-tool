@@ -206,6 +206,12 @@ class YearPanelModel(QObject):
                 self._intensity_replaced.append(None)
             else:
                 self._intensity_replaced.append(slab_data['intensity_replaced'])
+            
+            if 'comments' not in slab_data:
+                self._slabs_info['comments'].append('')
+            else:
+                self._slabs_info['comments'].append(slab_data['comments'])
+
             if slab_data['length'] is None:
                 self._slabs_info['length'].append(None)
             else:
@@ -225,7 +231,7 @@ class YearPanelModel(QObject):
         """Updates state information about the current slab id.  
         """
         slab_id = self._slab_id_list_index
-        print(slab_id)
+  
         state_tuple = (self._primary_states[slab_id], 
                         self._secondary_states[slab_id],
                         self._special_states[slab_id],
@@ -235,7 +241,8 @@ class YearPanelModel(QObject):
                         self._slabs_info['mean_faulting'][slab_id],
                         self._slab_id_list[slab_id],
                         self._slabs_info['start_im'][slab_id],
-                        self._slabs_info['end_im'][slab_id])
+                        self._slabs_info['end_im'][slab_id],
+                        self._slabs_info['comments'][slab_id])
         self.state_changed_signal.state_changed.emit(state_tuple)
 
         # update the back and next buttons
@@ -263,7 +270,8 @@ class YearPanelModel(QObject):
                         'primary_state': self._primary_states[i],
                         'secondary_state': self._secondary_states[i],
                         'special_state': self._special_states[i],
-                        'intensity_replaced': self._intensity_replaced[i]
+                        'intensity_replaced': self._intensity_replaced[i],
+                        'comments': self._slabs_info['comments'][i]
                     },
                     seg_str
                 )

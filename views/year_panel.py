@@ -55,8 +55,11 @@ class YearPanel(QWidget):
         self.yr_label.clicked.connect(
             self._year_panel_controller.popup_original_image
         )
+        self.comments_field.textChanged.connect(
+            self._year_panel_controller.change_comments
+        )
 
-        
+
     @pyqtSlot(str)
     def on_BY_slab_changed(self, slab_dir):
         try:
@@ -79,6 +82,8 @@ class YearPanel(QWidget):
         self.back_btn.setEnabled(not lock)  
         self.next_btn.setEnabled(not lock)
         self.replaced_box.setEnabled(not lock)  
+        self.replaced_intensity_box.setEnabled(not lock)    
+        self.comments_field.setEnabled(not lock)
         self.faulting_lbl.setText('Average Faulting: N/A')
         self.length_lbl.setText('Length: N/A')
         self.width_lbl.setText('Width: N/A')
@@ -121,12 +126,12 @@ class YearPanel(QWidget):
 
         Args:
             state_tuple (tuple[str, str, str, str, float, float, float, int, int, 
-            int]): tuple containing the primary state, secondary state, special 
+            int, str]): tuple containing the primary state, secondary state, special 
             state, intensity replaced, length, width, average faulting of slab, CY index, start im, 
-            end im
+            end im, comments
         """
         primary_state, secondary_state, special_state, intensity_replaced, length, width, \
-        avg_faulting, cy_index, start_im, end_im = state_tuple
+        avg_faulting, cy_index, start_im, end_im, comments = state_tuple
 
         for btn in self.state_btn_group.buttons():
             btn.setIcon(QIcon())
@@ -148,6 +153,7 @@ class YearPanel(QWidget):
         else:
             self.replaced_intensity_box.setChecked(False)
         
+        self.comments_field.setText(comments)
         faulting_txt = f'Average Faulting: {avg_faulting:.2f}' if avg_faulting \
             else 'Average Faulting: N/A'
         length_txt = f'Length: {length:.2f} ft.' if length else 'Length: N/A'

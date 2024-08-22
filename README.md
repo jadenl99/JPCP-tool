@@ -97,3 +97,8 @@ There are shortcuts available to toggle Range and Intensity images. Press `CTRL 
 * `ALT + <-` to go to the previous images 
 * `SHIFT + click on state button` to toggle from that year onward              
 Also, if the image is too small, hover over the year on the top and click the button to display a pop-up window with the image at its original size. 
+## Changelog
+### [3.0.1] - 2024-08-22
+* Fixes
+  * Comments field now updates correctly and is stored in database for each specific slab
+  * Clicking on the year now displays a more clear image, even for concatenated images
