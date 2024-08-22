@@ -34,8 +34,12 @@ class YearPanelController(QObject):
         """Opens a dialog box to display the original image of the slab
         """
         try:
-            image = Image.open(self._year_panel_model.img_directory)
-            image.show()   
+            # image = Image.open(self._year_panel_model.img_directory)
+            # image.show()   
+            img = self.get_slab_image(convertToQtImage=False)
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            image = Image.fromarray(img_rgb)
+            image.show()
         except:
             pass
 
@@ -93,6 +97,19 @@ class YearPanelController(QObject):
         self._year_panel_model.panel_updated = True
     
 
+    @pyqtSlot(str)
+    def change_comments(self, comments):
+        """Changes the comments of the slab in the model
+
+        Args:
+            comments (str): the comments to add to the slab
+        """
+        index = self._year_panel_model.slab_id_list_index
+        self._year_panel_model.panel_updated = True
+        self._year_panel_model.slabs_info['comments'][index] = comments.strip()
+        
+
+
     def get_slab_image(self, convertToQtImage=True):
         """Returns the image of the slab
 
@@ -125,7 +142,8 @@ class YearPanelController(QObject):
         if convertToQtImage:
             return self.convertCvImage2QtImage(img)
        
-        return cv2.imread(img_path)    
+        #return cv2.imread(img_path)    
+        return img
 
     def concat_images(self, id1, id2):
         """Concatenates two images vertically

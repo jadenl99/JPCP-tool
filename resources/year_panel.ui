@@ -602,16 +602,19 @@ QToolButton:enabled:hover {
           <string/>
          </property>
          <property name="text">
-          <string>Comments...</string>
+          <string/>
          </property>
          <property name="cursorPosition">
-          <number>11</number>
+          <number>0</number>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="dragEnabled">
           <bool>false</bool>
+         </property>
+         <property name="placeholderText">
+          <string>Comments...</string>
          </property>
         </widget>
        </item>

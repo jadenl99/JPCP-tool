@@ -102,7 +102,8 @@ class ToolController(QObject):
                     'width' : [],
                     'mean_faulting': [],
                     'start_im': [],
-                    'end_im': []
+                    'end_im': [],
+                    'comments': []
                 }
                 
                 panel_model.populate_slab_info()
