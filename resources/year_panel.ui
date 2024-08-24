@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>757</width>
+    <width>570</width>
     <height>886</height>
    </rect>
   </property>
@@ -623,7 +623,7 @@ QToolButton:enabled:hover {
      <item>
       <layout class="QHBoxLayout" name="horizontal_replaced_layout">
        <item>
-        <widget class="QCheckBox" name="replaced_box">
+        <widget class="QCheckBox" name="sealed_box">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -638,12 +638,12 @@ QToolButton:enabled:hover {
          </property>
          <property name="maximumSize">
           <size>
-           <width>100</width>
+           <width>150</width>
            <height>16777215</height>
           </size>
          </property>
          <property name="text">
-          <string>Replaced?</string>
+          <string>Crack Sealing?</string>
          </property>
         </widget>
        </item>
@@ -657,6 +657,19 @@ QToolButton:enabled:hover {
          </property>
          <property name="text">
           <string>Intensity Replaced?</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="spalled_box">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Spalling?</string>
          </property>
         </widget>
        </item>

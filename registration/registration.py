@@ -179,10 +179,11 @@ class SlabRegistration(QObject):
                 
                 if existing_rep_year:
                     # mark slab as R
-                    for index in cy_entries:
-                        self.slab_inventory.add_slab_update_request(
-                            year, index, {'special_state': 'R'}, self.seg_str
-                        )
+                    # for index in cy_entries:
+                    #     self.slab_inventory.add_slab_update_request(
+                    #         year, index, {'special_state': 'R'}, self.seg_str
+                    #     )
+                    pass
                 if (not existing_rep_year and 
                     rep_type != AlignmentType.FULL_TWO_ALIGN):
                     print(f'BY: {self.by}, byi: {byi}, ratio: {replaced_ratio}, type: {rep_type}')
@@ -277,9 +278,7 @@ class SlabRegistration(QObject):
                             year, yr_id, self.seg_str)
                         # TODO: Add parameter to show annotated intensity images
                         if ('intensity_replaced' in yr_slab and (include_intensity_replaced 
-                            and yr_slab['intensity_replaced'] == 'R') or
-                            (include_replaced 
-                            and yr_slab['special_state'] == 'R')):
+                            and yr_slab['intensity_replaced'] == 'R')):
                             row_dict[f'{year}_state'] = 'R'
                         else:
                             row_dict[f'{year}_state'] = yr_slab['primary_state']

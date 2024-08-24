@@ -34,8 +34,6 @@ class YearPanelController(QObject):
         """Opens a dialog box to display the original image of the slab
         """
         try:
-            # image = Image.open(self._year_panel_model.img_directory)
-            # image.show()   
             img = self.get_slab_image(convertToQtImage=False)
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(img_rgb)
@@ -65,21 +63,29 @@ class YearPanelController(QObject):
     
 
     @pyqtSlot(bool)
-    def change_replaced_info(self, is_replaced):
+    def change_sealed_info(self, is_sealed):
         """Changes the replaced state of the slab in the model
 
         Args:
             is_replaced (bool): whether the slab is replaced or not
         """
-        
         index = self._year_panel_model.slab_id_list_index
-        if is_replaced:
-            self._year_panel_model.special_states[index] = 'R'
-        else:
-            self._year_panel_model.special_states[index] = None
+        self._year_panel_model.sealed[index] = is_sealed
         self._year_panel_model.panel_updated = True
 
     
+    @pyqtSlot(bool)
+    def change_spalled_info(self, is_spalled):
+        """Changes the replaced state of the slab in the model
+
+        Args:
+            is_replaced (bool): whether the slab is replaced or not
+        """
+        index = self._year_panel_model.slab_id_list_index
+        self._year_panel_model.spalled[index] = is_spalled
+        self._year_panel_model.panel_updated = True
+        
+
     @pyqtSlot(bool)
     def change_replaced_intensity_info(self, is_replaced):
         """Changes the replaced state of the slab in the model

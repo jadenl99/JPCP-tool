@@ -34,11 +34,14 @@ class AnnotationTool(QMainWindow):
             panel[1].state_btn_group.buttonClicked.connect(
                 self.on_state_changed
                 )
-            panel[1].replaced_box.clicked.connect(
-                lambda: self.on_replaced_changed()
+            panel[1].sealed_box.clicked.connect(
+                lambda: self.on_sealed_changed()
             )
             panel[1].replaced_intensity_box.clicked.connect(
                 lambda: self.on_replaced_intensity_changed())
+            panel[1].spalled_box.clicked.connect(
+                lambda: self.on_spalled_changed()
+            )
             years_layout.addWidget(panel[1])
         self.scroll_year_contents.setLayout(years_layout)
         
@@ -159,13 +162,13 @@ class AnnotationTool(QMainWindow):
         
 
     @pyqtSlot(bool)
-    def on_replaced_changed(self):
+    def on_sealed_changed(self):
         checkbox = self.sender()
         modifer = QApplication.keyboardModifiers()
         sorted_year_panels = sorted(self._year_panels.items())
         pressed_yr = None
         for year, year_panel in sorted_year_panels:
-            if year_panel.replaced_box == checkbox:
+            if year_panel.sealed_box == checkbox:
                 
                 pressed_yr = year
                 break
@@ -177,11 +180,36 @@ class AnnotationTool(QMainWindow):
                                       and modifer == QtCore.Qt.ShiftModifier
                                       and not 
                                       year_panel._year_panel_model.lock_panel):
-                year_panel.replaced_box.setChecked(is_checked)  
-                year_panel._year_panel_controller.change_replaced_info(
+                year_panel.sealed_box.setChecked(is_checked)
+                year_panel._year_panel_controller.change_sealed_info(
                     is_checked
                 )
+                
         
+    @pyqtSlot(bool)
+    def on_spalled_changed(self):
+        checkbox = self.sender()
+        modifer = QApplication.keyboardModifiers()
+        sorted_year_panels = sorted(self._year_panels.items())
+        pressed_yr = None
+        for year, year_panel in sorted_year_panels:
+            if year_panel.spalled_box == checkbox:
+                
+                pressed_yr = year
+                break
+        
+        
+        is_checked = checkbox.isChecked()
+        for year, year_panel in sorted_year_panels:
+            if year == pressed_yr or (year > pressed_yr 
+                                      and modifer == QtCore.Qt.ShiftModifier
+                                      and not 
+                                      year_panel._year_panel_model.lock_panel):
+                year_panel.spalled_box.setChecked(is_checked)
+                year_panel._year_panel_controller.change_spalled_info(
+                    is_checked
+                )
+
 
     @pyqtSlot(bool)
     def on_replaced_intensity_changed(self):

@@ -95,7 +95,8 @@ class ToolController(QObject):
                 # set states for each CY slab
                 panel_model.primary_states = []
                 panel_model.secondary_states = []
-                panel_model.special_states = []
+                panel_model.sealed = []
+                panel_model.spalled = []
                 panel_model.intensity_replaced = []
                 panel_model.slabs_info = {
                     'length' : [],

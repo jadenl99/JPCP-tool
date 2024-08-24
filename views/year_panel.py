@@ -81,7 +81,7 @@ class YearPanel(QWidget):
         """
         self.back_btn.setEnabled(not lock)  
         self.next_btn.setEnabled(not lock)
-        self.replaced_box.setEnabled(not lock)  
+        self.sealed_box.setEnabled(not lock)  
         self.replaced_intensity_box.setEnabled(not lock)    
         self.comments_field.setEnabled(not lock)
         self.faulting_lbl.setText('Average Faulting: N/A')
@@ -125,13 +125,16 @@ class YearPanel(QWidget):
         faulting.
 
         Args:
-            state_tuple (tuple[str, str, str, str, float, float, float, int, int, 
-            int, str]): tuple containing the primary state, secondary state, special 
-            state, intensity replaced, length, width, average faulting of slab, CY index, start im, 
-            end im, comments
+            state_tuple (tuple[
+                str, str, bool, bool, str, float, 
+                float, float, int, int, int, str
+            ]): tuple containing the primary state, secondary state, 
+            sealed, spalled, intensity replaced, length, width, 
+            average faulting of slab, CY index, start im, end im, comments
         """
-        primary_state, secondary_state, special_state, intensity_replaced, length, width, \
-        avg_faulting, cy_index, start_im, end_im, comments = state_tuple
+        primary_state, secondary_state, sealed, spalled, intensity_replaced, \
+        length, width, avg_faulting, cy_index, start_im, end_im, comments \
+        = state_tuple
 
         for btn in self.state_btn_group.buttons():
             btn.setIcon(QIcon())
@@ -143,10 +146,9 @@ class YearPanel(QWidget):
             else:
                 btn.setChecked(False)
             
-        if special_state == 'R':
-            self.replaced_box.setChecked(True)
-        else:
-            self.replaced_box.setChecked(False)
+        
+        self.sealed_box.setChecked(sealed)
+        self.spalled_box.setChecked(spalled)
         
         if intensity_replaced == 'R':
             self.replaced_intensity_box.setChecked(True)

@@ -65,7 +65,8 @@ class YearPanelModel(QObject):
         self._img_directory = None
         self._primary_states = None
         self._secondary_states = None
-        self._special_states = None
+        self._sealed = None
+        self._spalled = None
         self._intensity_replaced = None
         self._slabs_info = None
         self._seg_str = seg_str
@@ -139,14 +140,24 @@ class YearPanelModel(QObject):
 
 
     @property
-    def special_states(self):
-        return self._special_states
+    def sealed(self):
+        return self._sealed
     
 
-    @special_states.setter
-    def special_states(self, special_states):
-        self._special_states = special_states
+    @sealed.setter
+    def sealed(self, special_states):
+        self._sealed = special_states
     
+
+    @property
+    def spalled(self):
+        return self._spalled
+    
+
+    @spalled.setter
+    def spalled(self, spalled):
+        self._spalled = spalled
+
 
     @property
     def intensity_replaced(self):
@@ -201,7 +212,16 @@ class YearPanelModel(QObject):
                                                         self._seg_str)
             self._primary_states.append(slab_data['primary_state'])
             self._secondary_states.append(slab_data['secondary_state'])
-            self._special_states.append(slab_data['special_state'])
+            if 'sealed' not in slab_data:
+                self._sealed.append(False)
+            else:
+                self._sealed.append(slab_data['sealed'])
+
+            if 'spalled' not in slab_data:
+                self._spalled.append(False)
+            else:
+                self._spalled.append(slab_data['spalled'])
+
             if 'intensity_replaced' not in slab_data:
                 self._intensity_replaced.append(None)
             else:
@@ -234,7 +254,8 @@ class YearPanelModel(QObject):
   
         state_tuple = (self._primary_states[slab_id], 
                         self._secondary_states[slab_id],
-                        self._special_states[slab_id],
+                        self._sealed[slab_id],
+                        self._spalled[slab_id],
                         self._intensity_replaced[slab_id],
                         self._slabs_info['length'][slab_id],
                         self._slabs_info['width'][slab_id],
@@ -269,7 +290,8 @@ class YearPanelModel(QObject):
                     {
                         'primary_state': self._primary_states[i],
                         'secondary_state': self._secondary_states[i],
-                        'special_state': self._special_states[i],
+                        'sealed': self._sealed[i],
+                        'spalled': self._spalled[i],
                         'intensity_replaced': self._intensity_replaced[i],
                         'comments': self._slabs_info['comments'][i]
                     },
