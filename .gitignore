@@ -174,3 +174,5 @@ cython_debug/
 .ipynb_checkpoints/
 /notebooks
 /data_pipeline/crop_slab_test
+/I16EB
+/I16WB
