@@ -107,10 +107,6 @@ class RegistrationMenu(QWidget):
         )   
 
 
-
-
-
-
     @pyqtSlot(list)
     def populate_years_selector(self, years):
         """Populates the year selector with the years from the database.
