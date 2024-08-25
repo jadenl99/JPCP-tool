@@ -32,8 +32,6 @@ def generate_baseline_lengths(replacement_lengths, pattern):
     pattern_avg = sum(pattern) / len(pattern)   
     est_slabs = round(sum(replacement_lengths) / pattern_avg)
     baseline_lengths = [0 for i in range(est_slabs)]
-    
-
     return baseline_lengths
 
 df = pd.read_excel('lengths.xlsx')

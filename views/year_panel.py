@@ -24,7 +24,8 @@ class YearPanel(QWidget):
         self.state_btn_group.addButton(self.ss_btn)
         self.state_btn_group.addButton(self.nc_btn)
         self.state_btn_group.addButton(self.error_btn)
-
+        self.replaced_layout.setAlignment(Qt.AlignCenter)
+        self.comments_layout.setAlignment(Qt.AlignCenter)
         self.vertical_panel_layout.setAlignment(Qt.AlignCenter)
         # listen to updates from model
         self._year_panel_model.image_signal.image_changed.connect(
