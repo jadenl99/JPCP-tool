@@ -375,13 +375,13 @@ class CropSlabsCVAT:
                             "y_min (mm)": y_mm_bottom,
                             "y_max (mm)": y_mm_top
                             })
-        
-
+        start_im = self.file_manager.get_im_id(
+                input_files[bottom_img_index]) 
+        end_im = self.file_manager.get_im_id(input_files[top_img_index])
         
         if not self.recorded and not self.validation_only:
-            start_im = self.file_manager.get_im_id(
-                input_files[bottom_img_index]) 
-            end_im = self.file_manager.get_im_id(input_files[top_img_index])
+            
+            
             x_min_px = bottom_joint.get_min_x()
             x_max_px = bottom_joint.get_max_x()
             x_min_mm = self.scaler.convert_px_to_mm_relative(x_min_px, 0, 0)[0]

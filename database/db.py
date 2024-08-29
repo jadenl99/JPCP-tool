@@ -1,9 +1,20 @@
 from pymongo import MongoClient, UpdateOne
 import pymongo
+import os
+#from dotenv import load_dotenv
+
 class SlabInventory():
     def __init__(self):
-        CONNECTION_STRING = 'mongodb://localhost:27017'
-        self.client = MongoClient(CONNECTION_STRING)
+        #load_dotenv()
+        #USERNAME = os.getenv('SLAB_DB_USER')
+        #PASSWORD = os.getenv('SLAB_DB_PASS')
+        #CONNECTION_STRING = f'mongodb+srv://{USERNAME}:{PASSWORD}@cluster0.vjbdc5r.mongodb.net/'
+        CONNECTION_STRING ="mongodb://localhost:27017"
+        try:
+            self.client = MongoClient(CONNECTION_STRING)
+        except:
+            print('Error connecting to database')
+            exit(1)
         self.db = self.client['jpcp_deterioration']
         self.registration_collection = self.db['registration']
         self.raw_subjoint_collection = self.db['raw_subjoint_data']

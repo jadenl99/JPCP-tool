@@ -1,10 +1,16 @@
 from pymongo import MongoClient
 from datetime import datetime
+import os
+#from dotenv import load_dotenv
 class DBWriter:
     def __init__(self, interstate: str, MM_start: int,
                  MM_end: int, year: int, mm_height: int):
         # set up connection to database
-        self.CONNECTION_STRING = 'mongodb://localhost:27017'
+        # load_dotenv()
+        # USERNAME = os.getenv('SLAB_DB_USER')
+        # PASSWORD = os.getenv('SLAB_DB_PASS')
+        # self.CONNECTION_STRING = f'mongodb+srv://{USERNAME}:{PASSWORD}@cluster0.vjbdc5r.mongodb.net/'
+        self.CONNECTION_STRING = 'mongodb://localhost:27017/'
         self.client = MongoClient(self.CONNECTION_STRING)
         self.db = self.client['jpcp_deterioration']    
         self.subjoint_collection = self.db['raw_subjoint_data']
