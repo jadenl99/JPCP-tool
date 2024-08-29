@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>340</width>
-    <height>836</height>
+    <height>922</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -82,8 +82,14 @@
         <property name="leftMargin">
          <number>5</number>
         </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
         <property name="rightMargin">
          <number>5</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
         </property>
         <item>
          <widget class="QLabel" name="slab_img">
@@ -131,6 +137,12 @@
         </size>
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
         <item>
          <widget class="QToolButton" name="back_btn">
           <property name="sizePolicy">
@@ -443,7 +455,7 @@ border-style : inset;
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QPushButton" name="error_btn">
+           <widget class="QPushButton" name="b_btn">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -456,6 +468,32 @@ border-style : inset;
               <height>0</height>
              </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton{
+background-color : gray;
+border-style : outset;
+border-radius: 5px;
+font : bold 14px;
+adding : 2px;
+}
+QPushButton::checked{
+background-color: green;
+border-style : inset;
+}</string>
+            </property>
+            <property name="text">
+             <string>B</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QPushButton" name="error_btn">
             <property name="styleSheet">
              <string notr="true">QPushButton{
 background-color : white;
@@ -531,6 +569,16 @@ QToolButton:enabled:hover {
         <property name="bottomMargin">
          <number>2</number>
         </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="length_lbl">
+          <property name="text">
+           <string>Length:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="1">
          <widget class="QLabel" name="width_lbl">
           <property name="text">
@@ -555,16 +603,6 @@ QToolButton:enabled:hover {
          <widget class="QLabel" name="cy_index_lbl">
           <property name="text">
            <string>CY Slab Index:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="length_lbl">
-          <property name="text">
-           <string>Length:</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -681,14 +719,60 @@ QToolButton:enabled:hover {
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
        </property>
-       <layout class="QHBoxLayout" name="replaced_layout">
+       <layout class="QGridLayout" name="replaced_layout">
+        <property name="leftMargin">
+         <number>10</number>
+        </property>
         <property name="topMargin">
          <number>2</number>
         </property>
         <property name="bottomMargin">
          <number>2</number>
         </property>
-        <item>
+        <property name="horizontalSpacing">
+         <number>3</number>
+        </property>
+        <item row="1" column="2">
+         <widget class="QCheckBox" name="replaced_intensity_box">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>160</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Intensity Replaced?</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="sealed_box">
+          <property name="text">
+           <string>Sealing?</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2">
+         <widget class="QCheckBox" name="joint_spall_box">
+          <property name="text">
+           <string>Joint Spall?</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QCheckBox" name="patched_spall_box">
+          <property name="text">
+           <string>Patched Spall?</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
          <widget class="QCheckBox" name="replaced_box">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -713,22 +797,10 @@ QToolButton:enabled:hover {
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QCheckBox" name="replaced_intensity_box">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>160</width>
-            <height>16777215</height>
-           </size>
-          </property>
+        <item row="6" column="1">
+         <widget class="QCheckBox" name="failed_spall_box">
           <property name="text">
-           <string>Intensity Replaced?</string>
+           <string>Failed Spall Patch?</string>
           </property>
          </widget>
         </item>

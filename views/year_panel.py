@@ -24,6 +24,7 @@ class YearPanel(QWidget):
         self.state_btn_group.addButton(self.ss_btn)
         self.state_btn_group.addButton(self.nc_btn)
         self.state_btn_group.addButton(self.error_btn)
+        self.state_btn_group.addButton(self.b_btn)
         self.replaced_layout.setAlignment(Qt.AlignCenter)
         self.comments_layout.setAlignment(Qt.AlignCenter)
         self.vertical_panel_layout.setAlignment(Qt.AlignCenter)
@@ -84,7 +85,11 @@ class YearPanel(QWidget):
         self.next_btn.setEnabled(not lock)
         self.sealed_box.setEnabled(not lock)  
         self.replaced_intensity_box.setEnabled(not lock)    
+        self.replaced_box.setEnabled(not lock)  
         self.comments_field.setEnabled(not lock)
+        self.failed_spall_box.setEnabled(not lock)
+        self.joint_spall_box.setEnabled(not lock)
+        self.patched_spall_box.setEnabled(not lock)
         self.faulting_lbl.setText('Average Faulting: N/A')
         self.length_lbl.setText('Length: N/A')
         self.width_lbl.setText('Width: N/A')
@@ -127,13 +132,13 @@ class YearPanel(QWidget):
 
         Args:
             state_tuple (tuple[
-                str, str, bool, bool, str, float, 
+                str, str, bool, bool, bool, bool, str, float, 
                 float, float, int, int, int, str
             ]): tuple containing the primary state, secondary state, 
-            sealed, spalled, intensity replaced, length, width, 
+            sealed, failed spall, joint spall, patched spall, intensity replaced, length, width, 
             average faulting of slab, CY index, start im, end im, comments
         """
-        primary_state, secondary_state, sealed, spalled, intensity_replaced, \
+        primary_state, secondary_state, sealed, failed_spall, joint_spall, patched_spall, intensity_replaced, \
         length, width, avg_faulting, cy_index, start_im, end_im, comments \
         = state_tuple
 
@@ -149,8 +154,9 @@ class YearPanel(QWidget):
             
         
         self.sealed_box.setChecked(sealed)
-        self.spalled_box.setChecked(spalled)
-        
+        self.failed_spall_box.setChecked(failed_spall)
+        self.joint_spall_box.setChecked(joint_spall)
+        self.patched_spall_box.setChecked(patched_spall)
         if intensity_replaced == 'R':
             self.replaced_intensity_box.setChecked(True)
         else:

@@ -117,7 +117,7 @@ slab_collection.insert_one({
         })
 
 slab_collection.insert_one({
-        'seg_year_id': 'I16WB_MM22_MM12_2013',
+            'seg_year_id': 'I16WB_MM22_MM12_2013',
             'slab_index': 1538,
             'length': 7044,
             'width': 0,

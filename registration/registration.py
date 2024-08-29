@@ -24,13 +24,13 @@ class SlabRegistration(QObject):
         self.REPLACED_THRESHOLD = ratio
         #print(ratio)
         # determines if BY/CY pair has joint alignment
-        self.JOINT_THRESHOLD = 400 
+        self.JOINT_THRESHOLD = 610 # adjusted from 400
         self.minslablength = 100
         self.data_dir = data_dir
         self.possiblyor = 2
         self.seg_str = seg_str
-        self.interval = 1220 # 1220 mm = 4 feet
-        self.endbuffer = 610 # 610 mm = 2 feet  
+        #self.interval = 1220 # 1220 mm = 4 feet
+        #self.endbuffer = 610 # 610 mm = 2 feet  
         self.years = years
         self.first_slabs = first_slabs
         self.by = by
@@ -186,7 +186,7 @@ class SlabRegistration(QObject):
                     pass
                 if (not existing_rep_year and 
                     rep_type != AlignmentType.FULL_TWO_ALIGN):
-                    print(f'BY: {self.by}, byi: {byi}, ratio: {replaced_ratio}, type: {rep_type}')
+                    #print(f'BY: {self.by}, byi: {byi}, ratio: {replaced_ratio}, type: {rep_type}')
                     self.reg_data[byi]['replaced_type'] = rep_type.name
                     self.reg_data[byi]['interior'] = interior
                     self.reg_data[byi]['exterior'] = exterior

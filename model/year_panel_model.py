@@ -66,7 +66,9 @@ class YearPanelModel(QObject):
         self._primary_states = None
         self._secondary_states = None
         self._sealed = None
-        self._spalled = None
+        self._failed_spall = None
+        self._joint_spall = None
+        self._patched_spall = None
         self._intensity_replaced = None
         self._slabs_info = None
         self._seg_str = seg_str
@@ -150,13 +152,33 @@ class YearPanelModel(QObject):
     
 
     @property
-    def spalled(self):
-        return self._spalled
+    def failed_spall(self):
+        return self._failed_spall
     
 
-    @spalled.setter
-    def spalled(self, spalled):
-        self._spalled = spalled
+    @failed_spall.setter
+    def failed_spall(self, failed_spall):
+        self._failed_spall = failed_spall
+
+
+    @property
+    def joint_spall(self):
+        return self._joint_spall
+    
+
+    @joint_spall.setter
+    def joint_spall(self, joint_spall):
+        self._joint_spall = joint_spall
+
+    
+    @property
+    def patched_spall(self):
+        return self._patched_spall
+    
+
+    @patched_spall.setter
+    def patched_spall(self, patched_spall):
+        self._patched_spall = patched_spall
 
 
     @property
@@ -217,11 +239,21 @@ class YearPanelModel(QObject):
             else:
                 self._sealed.append(slab_data['sealed'])
 
-            if 'spalled' not in slab_data:
-                self._spalled.append(False)
+            if 'failed_spall' not in slab_data:
+                self._failed_spall.append(False)
             else:
-                self._spalled.append(slab_data['spalled'])
+                self._failed_spall.append(slab_data['failed_spall'])
 
+            if 'joint_spall' not in slab_data:
+                self._joint_spall.append(False)
+            else:
+                self._joint_spall.append(slab_data['joint_spall'])
+            
+            if 'patched_spall' not in slab_data:
+                self._patched_spall.append(False)
+            else:
+                self._patched_spall.append(slab_data['patched_spall'])
+                
             if 'intensity_replaced' not in slab_data:
                 self._intensity_replaced.append(None)
             else:
@@ -255,7 +287,9 @@ class YearPanelModel(QObject):
         state_tuple = (self._primary_states[slab_id], 
                         self._secondary_states[slab_id],
                         self._sealed[slab_id],
-                        self._spalled[slab_id],
+                        self._failed_spall[slab_id],
+                        self._joint_spall[slab_id],
+                        self._patched_spall[slab_id],
                         self._intensity_replaced[slab_id],
                         self._slabs_info['length'][slab_id],
                         self._slabs_info['width'][slab_id],
@@ -291,7 +325,9 @@ class YearPanelModel(QObject):
                         'primary_state': self._primary_states[i],
                         'secondary_state': self._secondary_states[i],
                         'sealed': self._sealed[i],
-                        'spalled': self._spalled[i],
+                        'failed_spall': self._failed_spall[i],
+                        'joint_spall': self._joint_spall[i],
+                        'patched_spall': self._patched_spall[i],
                         'intensity_replaced': self._intensity_replaced[i],
                         'comments': self._slabs_info['comments'][i]
                     },

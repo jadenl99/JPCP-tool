@@ -75,16 +75,40 @@ class YearPanelController(QObject):
 
     
     @pyqtSlot(bool)
-    def change_spalled_info(self, is_spalled):
+    def change_failed_spall_info(self, is_failed_spall):
         """Changes the replaced state of the slab in the model
 
         Args:
             is_replaced (bool): whether the slab is replaced or not
         """
         index = self._year_panel_model.slab_id_list_index
-        self._year_panel_model.spalled[index] = is_spalled
+        self._year_panel_model.failed_spall[index] = is_failed_spall
         self._year_panel_model.panel_updated = True
         
+
+    @pyqtSlot(bool)
+    def change_joint_spall_info(self, is_joint_spall):
+        """Changes the replaced state of the slab in the model
+
+        Args:
+            is_replaced (bool): whether the slab is replaced or not
+        """
+        index = self._year_panel_model.slab_id_list_index
+        self._year_panel_model.joint_spall[index] = is_joint_spall
+        self._year_panel_model.panel_updated = True
+    
+
+    @pyqtSlot(bool)
+    def change_patched_spall_info(self, is_patched_spall):
+        """Changes the replaced state of the slab in the model
+
+        Args:
+            is_replaced (bool): whether the slab is replaced or not
+        """
+        index = self._year_panel_model.slab_id_list_index
+        self._year_panel_model.patched_spall[index] = is_patched_spall
+        self._year_panel_model.panel_updated
+
 
     @pyqtSlot(bool)
     def change_replaced_intensity_info(self, is_replaced):

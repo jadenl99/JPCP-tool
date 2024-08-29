@@ -40,8 +40,14 @@ class AnnotationTool(QMainWindow):
             )
             panel[1].replaced_intensity_box.clicked.connect(
                 lambda: self.on_replaced_intensity_changed())
-            panel[1].spalled_box.clicked.connect(
-                lambda: self.on_spalled_changed()
+            panel[1].failed_spall_box.clicked.connect(
+                lambda: self.on_failed_spall_changed()
+            )
+            panel[1].joint_spall_box.clicked.connect(
+                lambda: self.on_joint_spall_changed()
+            )
+            panel[1].patched_spall_box.clicked.connect(
+                lambda: self.on_patched_spall_changed()
             )
             years_layout.addWidget(panel[1])
         self.scroll_year_contents.setLayout(years_layout)
@@ -188,13 +194,13 @@ class AnnotationTool(QMainWindow):
                 
         
     @pyqtSlot(bool)
-    def on_spalled_changed(self):
+    def on_failed_spall_changed(self):
         checkbox = self.sender()
         modifer = QApplication.keyboardModifiers()
         sorted_year_panels = sorted(self._year_panels.items())
         pressed_yr = None
         for year, year_panel in sorted_year_panels:
-            if year_panel.spalled_box == checkbox:
+            if year_panel.failed_spall_box == checkbox:
                 
                 pressed_yr = year
                 break
@@ -206,12 +212,61 @@ class AnnotationTool(QMainWindow):
                                       and modifer == QtCore.Qt.ShiftModifier
                                       and not 
                                       year_panel._year_panel_model.lock_panel):
-                year_panel.spalled_box.setChecked(is_checked)
-                year_panel._year_panel_controller.change_spalled_info(
+                year_panel.failed_spall_box.setChecked(is_checked)
+                year_panel._year_panel_controller.change_failed_spall_info(
                     is_checked
                 )
 
 
+    @pyqtSlot(bool)
+    def on_joint_spall_changed(self):
+        checkbox = self.sender()
+        modifer = QApplication.keyboardModifiers()
+        sorted_year_panels = sorted(self._year_panels.items())
+        pressed_yr = None
+        for year, year_panel in sorted_year_panels:
+            if year_panel.joint_spall_box == checkbox:
+                
+                pressed_yr = year
+                break
+        
+        
+        is_checked = checkbox.isChecked()
+        for year, year_panel in sorted_year_panels:
+            if year == pressed_yr or (year > pressed_yr 
+                                      and modifer == QtCore.Qt.ShiftModifier
+                                      and not 
+                                      year_panel._year_panel_model.lock_panel):
+                year_panel.joint_spall_box.setChecked(is_checked)
+                year_panel._year_panel_controller.change_joint_spall_info(
+                    is_checked
+                )
+
+
+    @pyqtSlot(bool)
+    def on_patched_spall_changed(self):
+        checkbox = self.sender()
+        modifer = QApplication.keyboardModifiers()
+        sorted_year_panels = sorted(self._year_panels.items())
+        pressed_yr = None
+        for year, year_panel in sorted_year_panels:
+            if year_panel.patched_spall_box == checkbox:
+                
+                pressed_yr = year
+                break
+        
+        
+        is_checked = checkbox.isChecked()
+        for year, year_panel in sorted_year_panels:
+            if year == pressed_yr or (year > pressed_yr 
+                                      and modifer == QtCore.Qt.ShiftModifier
+                                      and not 
+                                      year_panel._year_panel_model.lock_panel):
+                year_panel.patched_spall_box.setChecked(is_checked)
+                year_panel._year_panel_controller.change_patched_spall_info(
+                    is_checked
+                )
+    
     @pyqtSlot(bool)
     def on_replaced_intensity_changed(self):
         checkbox = self.sender()
@@ -255,7 +310,7 @@ class AnnotationTool(QMainWindow):
             list[0] is the primary state and list[1] is the secondary 
             state
         """
-
+        print("registered")
         checked_btns = [button for button in btn_group.buttons() 
                         if button.isChecked()]
 

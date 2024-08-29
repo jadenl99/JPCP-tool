@@ -55,8 +55,8 @@ class HorizontalJoint:
 
         y_max = self.get_max_y()
         y_min = self.get_min_y()
-        return (y_min - 25 <= new_subjoint.y1 <= y_max + 25 
-                or y_min - 25 <= new_subjoint.y2 <= y_max + 25)
+        return (y_min - 50 <= new_subjoint.y1 <= y_max + 50 
+                or y_min - 50 <= new_subjoint.y2 <= y_max + 50)
             
     
 
