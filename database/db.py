@@ -1,15 +1,13 @@
 from pymongo import MongoClient, UpdateOne
 import pymongo
 import os
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 class SlabInventory():
     def __init__(self):
-        #load_dotenv()
-        #USERNAME = os.getenv('SLAB_DB_USER')
-        #PASSWORD = os.getenv('SLAB_DB_PASS')
-        #CONNECTION_STRING = f'mongodb+srv://{USERNAME}:{PASSWORD}@cluster0.vjbdc5r.mongodb.net/'
-        CONNECTION_STRING ="mongodb://localhost:27017"
+        load_dotenv()
+        CONNECTION_STRING = os.getenv('SLAB_DB_CONN')
+
         try:
             self.client = MongoClient(CONNECTION_STRING)
         except:
