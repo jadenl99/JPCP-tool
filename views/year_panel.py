@@ -138,7 +138,7 @@ class YearPanel(QWidget):
             sealed, failed spall, joint spall, patched spall, intensity replaced, length, width, 
             average faulting of slab, CY index, start im, end im, comments
         """
-        primary_state, secondary_state, sealed, failed_spall, joint_spall, patched_spall, intensity_replaced, \
+        primary_state, secondary_state, sealed, failed_spall, joint_spall, patched_spall, intensity_replaced, replaced,\
         length, width, avg_faulting, cy_index, start_im, end_im, comments \
         = state_tuple
 
@@ -152,7 +152,10 @@ class YearPanel(QWidget):
             else:
                 btn.setChecked(False)
             
-        
+        if replaced == 'R':
+            self.replaced_box.setChecked(True)
+        else:
+            self.replaced_box.setChecked(False)
         self.sealed_box.setChecked(sealed)
         self.failed_spall_box.setChecked(failed_spall)
         self.joint_spall_box.setChecked(joint_spall)

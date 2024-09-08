@@ -100,6 +100,7 @@ class ToolController(QObject):
                 panel_model.joint_spall = []
                 panel_model.patched_spall = []
                 panel_model.intensity_replaced = []
+                panel_model.replaced = []
                 panel_model.slabs_info = {
                     'length' : [],
                     'width' : [],

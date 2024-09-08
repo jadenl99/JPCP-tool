@@ -103,7 +103,7 @@ class YearPanelController(QObject):
         """Changes the replaced state of the slab in the model
 
         Args:
-            is_replaced (bool): whether the slab is replaced or not
+            is_patched_spall (bool): whether the slab has spall or not
         """
         index = self._year_panel_model.slab_id_list_index
         self._year_panel_model.patched_spall[index] = is_patched_spall
@@ -126,6 +126,21 @@ class YearPanelController(QObject):
             self._year_panel_model.intensity_replaced[index] = None
         self._year_panel_model.panel_updated = True
     
+
+    @pyqtSlot(bool)
+    def change_replaced_info(self, is_replaced):
+        """Changes the replaced state of the slab in the model
+
+        Args:
+            is_replaced (bool): whether the slab is replaced or not
+        """
+        index = self._year_panel_model.slab_id_list_index
+        if is_replaced:
+            self._year_panel_model.replaced[index] = 'R'
+        else:
+            self._year_panel_model.replaced[index] = None
+        self._year_panel_model.panel_updated = True
+
 
     @pyqtSlot(str)
     def change_comments(self, comments):

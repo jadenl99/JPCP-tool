@@ -69,9 +69,20 @@ class YearPanelModel(QObject):
         self._failed_spall = None
         self._joint_spall = None
         self._patched_spall = None
+        self._replaced = None
         self._intensity_replaced = None
         self._slabs_info = None
         self._seg_str = seg_str
+
+
+    @property
+    def replaced(self):
+        return self._replaced
+    
+
+    @replaced.setter
+    def replaced(self, replaced):
+        self._replaced = replaced
 
 
     @property
@@ -238,7 +249,10 @@ class YearPanelModel(QObject):
                 self._sealed.append(False)
             else:
                 self._sealed.append(slab_data['sealed'])
-
+            if 'special_state' not in slab_data:
+                self._replaced.append(None)
+            else:
+                self._replaced.append(slab_data['special_state'])
             if 'failed_spall' not in slab_data:
                 self._failed_spall.append(False)
             else:
@@ -291,6 +305,7 @@ class YearPanelModel(QObject):
                         self._joint_spall[slab_id],
                         self._patched_spall[slab_id],
                         self._intensity_replaced[slab_id],
+                        self._replaced[slab_id],
                         self._slabs_info['length'][slab_id],
                         self._slabs_info['width'][slab_id],
                         self._slabs_info['mean_faulting'][slab_id],
@@ -325,6 +340,7 @@ class YearPanelModel(QObject):
                         'primary_state': self._primary_states[i],
                         'secondary_state': self._secondary_states[i],
                         'sealed': self._sealed[i],
+                        'special_state': self._replaced[i],
                         'failed_spall': self._failed_spall[i],
                         'joint_spall': self._joint_spall[i],
                         'patched_spall': self._patched_spall[i],
