@@ -1,6 +1,7 @@
 import copy
 import sys, os
 import csv
+import pandas as pd
 from tqdm import tqdm
 from os.path import exists
 from registration import overlap
@@ -24,7 +25,7 @@ class SlabRegistration(QObject):
         self.REPLACED_THRESHOLD = ratio
         #print(ratio)
         # determines if BY/CY pair has joint alignment
-        self.JOINT_THRESHOLD = 610 # adjusted from 400
+        self.JOINT_THRESHOLD = 400 # adjusted from 400
         self.minslablength = 100
         self.data_dir = data_dir
         self.possiblyor = 2
@@ -108,6 +109,8 @@ class SlabRegistration(QObject):
         max_overlap = -1
         replaced_ratio = 0
         replaced_slab_length = -1
+        total_intensity_replaced = 0
+        intensity_replaced_list = []
         while byi < len(self.by_slabs) and cyi < len(cy_slabs):
 
             if byi >= len(self.by_slabs) + 1:
@@ -126,6 +129,9 @@ class SlabRegistration(QObject):
                                                             by_length, 
                                                             cy_rel_offset, 
                                                             cy_length)
+            if 'intensity_replaced' in cy_slabs[cyi] and cy_slabs[cyi]['intensity_replaced'] == 'R':
+                total_intensity_replaced += overlap_percentage
+            
             # Check membership
             if (overlap_type == OverlapType.FULL_OVERLAP or 
                 overlap_type == OverlapType.BASE_MAJORITY_OVERLAP or
@@ -176,7 +182,6 @@ class SlabRegistration(QObject):
                                                     replaced_slab_length, 
                                                     replaced_ratio, 
                                                     self.REPLACED_THRESHOLD)
-                
                 if existing_rep_year:
                     # mark slab as R
                     # for index in cy_entries:
@@ -196,13 +201,16 @@ class SlabRegistration(QObject):
                         self.reg_data[byi]['replaced'] = year
                         # mark slab as R
                         for index in cy_entries:
-                            self.slab_inventory.add_slab_update_request(
-                                year, index, {'special_state': 'R'}, self.seg_str
-                            )
+                            # self.slab_inventory.add_slab_update_request(
+                            #     year, index, {'special_state': 'R'}, self.seg_str
+                            # )
+                            pass
                 interior = exterior = aligned = 0
                 max_overlap = -1
                 replaced_ratio = 0
                 replaced_slab_length = -1
+                intensity_replaced_list.append(total_intensity_replaced)
+                total_intensity_replaced = 0
                 byi += 1
                 if byi < len(self.by_slabs):
                     self.reg_data[byi][str(year)] = []
@@ -220,6 +228,7 @@ class SlabRegistration(QObject):
                 cy_rel_offset += cy_length
                 cyi += 1
         self.slab_inventory.execute_requests()
+        #pd.DataFrame(intensity_replaced_list).to_csv('intensity_replaced.csv')
     
 
     def build_single_spreadsheet(self, avg_faulting=False, 
@@ -256,8 +265,9 @@ class SlabRegistration(QObject):
             for year in self.years:
                 fields.append(f'{year}_total_crack_length')
             for year in self.years:
-                fields.append(f'{year}_average_crack_width')
-            
+                fields.append(f'{year}_median_crack_width')
+            for year in self.years:
+                fields.append(f'{year}_p95_faulting')
             curr_MP = beginMM
             fields.extend(['year_replaced', 'replaced_type'])
             writer = csv.DictWriter(csv_file, fieldnames=fields)    
@@ -277,22 +287,19 @@ class SlabRegistration(QObject):
                         yr_slab = self.slab_inventory.fetch_slab(
                             year, yr_id, self.seg_str)
                         # TODO: Add parameter to show annotated intensity images
-                        if ('intensity_replaced' in yr_slab and (include_intensity_replaced 
-                            and yr_slab['intensity_replaced'] == 'R')):
-                            row_dict[f'{year}_state'] = 'R'
-                        else:
-                            row_dict[f'{year}_state'] = yr_slab['primary_state']
+                        # if ('intensity_replaced' in yr_slab and (include_intensity_replaced 
+                        #     and yr_slab['intensity_replaced'] == 'R')) or yr_slab['special_state'] == 'R':  
+                        #     row_dict[f'{year}_state'] = 'R'
+                        # else:
+                        #     row_dict[f'{year}_state'] = yr_slab['primary_state']
 
-                        
-                        # row_dict[f'{year}_state'] = yr_slab['primary_state'] if (
-                        #     yr_slab['special_state'] != 'R' or not include_replaced) else (
-                        #     yr_slab['special_state'])
                         row_dict[f'{year}_faulting'] = (
                             self.avg_faulting_BY(i, year) if avg_faulting
-                            else yr_slab['mean_faulting']
+                            else yr_slab['median_faulting']
                             )
+                        row_dict[f'{year}_p95_faulting'] = yr_slab['p95_faulting']
                         row_dict[f'{year}_total_crack_length'] = yr_slab['total_crack_length'] if 'total_crack_length' in yr_slab else None
-                        row_dict[f'{year}_average_crack_width'] = yr_slab['avg_crack_width'] if 'avg_crack_width' in yr_slab else None
+                        row_dict[f'{year}_median_crack_width'] = yr_slab['median_crack_width'] if 'median_crack_width' in yr_slab else None
                     if year == self.by:
                         row_dict['BY_id'] = yr_id
                         row_dict['BY_length (ft)'] = round(yr_slab['length'] / 

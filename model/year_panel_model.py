@@ -243,8 +243,14 @@ class YearPanelModel(QObject):
         for slab_id in self._slab_id_list:
             slab_data = self._slab_inventory.fetch_slab(self._year, slab_id,
                                                         self._seg_str)
-            self._primary_states.append(slab_data['primary_state'])
-            self._secondary_states.append(slab_data['secondary_state'])
+            if 'primary_state' not in slab_data:
+                self._primary_states.append(None)
+            else:
+                self._primary_states.append(slab_data['primary_state'])
+            if 'secondary_state' not in slab_data:
+                self._secondary_states.append(None)
+            else:
+                self._secondary_states.append(slab_data['secondary_state'])
             if 'sealed' not in slab_data:
                 self._sealed.append(False)
             else:

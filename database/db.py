@@ -145,13 +145,20 @@ class SlabInventory():
         """
         seg_year_id = f'{seg_str}_{year}'
 
-        result = self.slab_collection.find(
-            {'seg_year_id': seg_year_id,
-            'slab_index': {'$gte': int(start_slab)}}
-        ).sort('slab_index', pymongo.ASCENDING) 
+        # result = self.slab_collection.find(
+        #     {'seg_year_id': seg_year_id,
+        #     'slab_index': {'$gte': int(start_slab)}}
+        # ).sort('slab_index', pymongo.ASCENDING).allow_disk_use(True)
+        result = self.slab_collection.aggregate(
+            [
+                {'$match': {'seg_year_id': seg_year_id,
+                            'slab_index': {'$gte': int(start_slab)}}},
+            ]
+        )
+        
         if not result:
             raise ValueError(f'No data found for the specified year {year}')
-
+        result = sorted(list(result), key=lambda x: x['slab_index'])
         return result
     
 
@@ -197,7 +204,7 @@ class SlabInventory():
         self.registration_collection.insert_one(entry)
     
 
-    def add_crack_stats(self, slab_index, crack_length, avg_crack_width, 
+    def add_crack_stats(self, slab_index, crack_length, avg_crack_width, median_crack_width,
                         seg_str, year):
         """Adds crack stats to the slab entry
 
@@ -205,13 +212,15 @@ class SlabInventory():
             slab_index (int): index of the slab
             crack_length (float): length of the crack
             avg_crack_width (float): average width of the crack
+            median_crack_width (float): median width of the crack
             seg_str (str): segment string
             year (int): year of the slab
         """
         seg_year_id = f'{seg_str}_{year}'
         self.slab_collection.update_one(
             {'seg_year_id': seg_year_id, 'slab_index': slab_index},
-            {'$set': {'total_crack_length': crack_length, 'avg_crack_width': avg_crack_width}}
+            {'$set': {'total_crack_length': crack_length, 'avg_crack_width': avg_crack_width,
+                      'median_crack_width': median_crack_width}}
         )
 
 
@@ -257,7 +266,7 @@ class SlabInventory():
                     }
                 ]
             }
-        ).sort("x_min", pymongo.ASCENDING)
+        ).sort("x_min", pymongo.ASCENDING).allow_disk_use(True)
         return raw_subjoints
     
 
@@ -306,11 +315,6 @@ class SlabInventory():
             'z3_median': z3_median,
             'z4_median': z4_median,
             'z5_median': z5_median,
-            'total_crack_length': None,
-            'avg_crack_width': None,
-            'primary_state': None,
-            'secondary_state': None,
-            'special_state': None
         }
         self.slab_collection.update_one(query, {'$set': entry}, upsert=True)
         #self.slab_collection.insert_one(entry)
