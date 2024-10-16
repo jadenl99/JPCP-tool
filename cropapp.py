@@ -12,7 +12,7 @@ if __name__ == '__main__':
                         type=str,
                         # default='crop-slabs',
                         required=True,
-                        help='Function to run ("crop-slabs" | "validation-only")')
+                        help='Function to run ("crop-slabs" | "validation-only" | "crop-only")')
 
     parser.add_argument('-d',
                         metavar='<filepath>',
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     end_MM = int(end_MM)
     year = int(year)
 
-    if func not in {"crop-slabs", "validation-only"}:
+    if func not in {"crop-slabs", "validation-only", "crop-only"}:
         raise ValueError("Please enter a valid function name.")
 
     
@@ -109,8 +109,17 @@ if __name__ == '__main__':
                          (eg. I16WB)")
 
     v_only = False
+    crop_only = False
+    if func == "crop-slabs":
+        response = input("Are you sure you want to update the database? Use '-f crop-only' if you only want to crop slabs. (Y/n): ")
+        if response.lower() == 'y':
+            pass
+        else:
+            exit()
     if func == "validation-only":
         v_only = True
+    if func == "crop-only":
+        crop_only = True
     CropSlabsCVAT(dir, pxh, pxw, mmh, mmw, mode, 
                   begin_MM, end_MM, year, interstate, 
-                  SlabInventory(), overwrite, v_only)
+                  SlabInventory(), overwrite, v_only, crop_only)

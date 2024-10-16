@@ -85,12 +85,14 @@ class CropFileManager(FileManager):
             ValueError: If the input image path does not exist
             ValueError: If the annotation path does not exist
         """
+        file_type = 'jpg'
         if image_mode == 'intensity':
             self.image_mode = ImageType.INTENSITY
         elif image_mode == 'range':
             self.image_mode = ImageType.RANGE
         elif image_mode == 'segmentation':
             self.image_mode = ImageType.SEGMENTATION
+            file_type = 'png'
         else:
             raise ValueError("Please use a valid image mode")
         self.input_im_path = os.path.join(self.data_path, 
@@ -104,7 +106,7 @@ class CropFileManager(FileManager):
                                             + self.image_mode.name.lower()))
         os.mkdir(self.output_im_path)
         
-        self.input_im_files = self.filter_files(self.input_im_path, "jpg")
+        self.input_im_files = self.filter_files(self.input_im_path, file_type)
 
         
         

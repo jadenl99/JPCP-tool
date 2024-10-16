@@ -19,12 +19,13 @@ import numpy as np
 import crop_app.fault_calc as fc
 from cvm import CvmBuilder
 
+IMG_EXT = '.png'
 class CropSlabsCVAT:
     def __init__(self, data_path, 
                  px_height, px_width, 
                  mm_height, mm_width,
                  mode, begin_MM, end_MM, year, interstate, 
-                 slab_inventory, overwrite, validation_only=False):
+                 slab_inventory, overwrite, validation_only=False, crop_only=False):
         # filepath of the dataset
         self.seg_str = f"{interstate}_MM{begin_MM}_MM{end_MM}"
         self.year = year
@@ -36,6 +37,7 @@ class CropSlabsCVAT:
         self.mm_height = mm_height
         self.mm_width = mm_width
         self.validation_only = validation_only
+        self.crop_only = crop_only
         self.im_length_mm = 5000
         self.file_manager = CropFileManager(data_path, year)
         self.scaler = None
@@ -52,7 +54,7 @@ class CropSlabsCVAT:
                 self.scaler = PXMMConverter(self.px_height, self.px_width, 
                                             self.mm_height, self.mm_width,
                                             len(self.file_manager.input_im_files))
-            if not self.recorded and not self.validation_only and overwrite:
+            if not self.recorded and not self.validation_only and not self.crop_only and overwrite:
                 self.slab_inventory.delete_segment_year_slabs(
                     self.seg_str, year
                     )
@@ -60,7 +62,7 @@ class CropSlabsCVAT:
             self.crop()
             self.recorded = True
 
-        if 'segmentation' in mode:
+        if 'segmentation' in mode and not self.crop_only:
             self.crack_stats_calculation()
 
 
@@ -90,7 +92,8 @@ class CropSlabsCVAT:
                     sum_m += w
                     count += 1
             avg_width = 0 if count == 0 else sum_m / count
-            self.slab_inventory.add_crack_stats(i, total_length, avg_width, 
+            median_width = 0 if count == 0 else float(np.median(np.array([item for sublist in widths for item in sublist])))
+            self.slab_inventory.add_crack_stats(i, total_length, avg_width, median_width,
                                             self.seg_str, self.year)
 
         
@@ -221,7 +224,7 @@ class CropSlabsCVAT:
             img = self.modify_image(img, bottom_joint, top_joint, y_offset)
             # save image to files
             cv2.imwrite(
-                os.path.join(self.file_manager.output_im_path, str(self.slab_num) + '.jpg'), img
+                os.path.join(self.file_manager.output_im_path, str(self.slab_num) + IMG_EXT), img
                 )
         self.write_slab_metadata(writer, bottom_joint, top_joint)
         self.slab_num += 1
@@ -295,6 +298,7 @@ class CropSlabsCVAT:
         
         if self.file_manager.image_mode.value == 'segmentation':
             pass
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
         return img
 
         
@@ -321,6 +325,7 @@ class CropSlabsCVAT:
             if self.file_manager.image_mode.value == 'segmentation':
                 temp_img = cv2.resize(temp_img, (self.px_width, self.px_height))
             img = cv2.vconcat([temp_img, img])
+        
         return img
 
 
@@ -339,6 +344,8 @@ class CropSlabsCVAT:
                                                           self.px_height)
         mid_img_index = bottom_joint.get_midpoint_img_id(self.num_files, 
                                                          self.px_height)
+        top_bottom_joint_img_index = bottom_joint.get_top_img_id(self.num_files,
+                                                                self.px_height)
         top_img_index = top_joint.get_top_img_id(self.num_files, self.px_height)
 
         px_width = bottom_joint.get_max_x() - bottom_joint.get_min_x()
@@ -362,7 +369,10 @@ class CropSlabsCVAT:
         y_mm_top = self.scaler.convert_px_to_mm_relative(
             0, y_px_top % self.px_height, top_img_index
             )[1]        
-        
+        y_mm_bottom_joint_top = self.scaler.convert_px_to_mm_relative(
+            0, bottom_joint.get_min_y() % self.px_height, top_bottom_joint_img_index
+        )[1]
+        # print(y_mm_bottom, y_mm_bottom_joint_top)
         input_files = self.file_manager.input_im_files
         if not self.validation_only:
             writer.writerow({
@@ -379,15 +389,12 @@ class CropSlabsCVAT:
                 input_files[bottom_img_index]) 
         end_im = self.file_manager.get_im_id(input_files[top_img_index])
         
-        if not self.recorded and not self.validation_only:
-            
-            
+        if not self.recorded and not self.validation_only and not self.crop_only:
             x_min_px = bottom_joint.get_min_x()
             x_max_px = bottom_joint.get_max_x()
             x_min_mm = self.scaler.convert_px_to_mm_relative(x_min_px, 0, 0)[0]
             x_max_mm = self.scaler.convert_px_to_mm_relative(x_max_px, 0, 0)[0]
-
-            faulting_data = fc.get_faulting_data(y_mm_bottom, y_mm_top,
+            faulting_data = fc.get_faulting_data(y_mm_bottom, y_mm_bottom_joint_top,
                                              self.seg_str, self.year,
                                              self.slab_inventory)
         
@@ -417,7 +424,7 @@ class CropSlabsCVAT:
             if filtered_faulting_vals is not None: 
                 mean_faulting = np.nanmean(np.abs(filtered_faulting_vals))
                 std_faulting = np.nanstd(filtered_faulting_vals)
-                percentile95_faulting = np.nanpercentile(filtered_faulting_vals, 95) 
+                percentile95_faulting = np.nanpercentile(np.abs(filtered_faulting_vals), 95) 
                 median_faulting = np.nanmedian(np.abs(filtered_faulting_vals))
                 percentage_positive = fc.percent_positive(np.array(faulting_vals))
                 zones = fc.zone_data(x_registered_vals, filtered_faulting_vals)
