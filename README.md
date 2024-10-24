@@ -103,3 +103,7 @@ Also, if the image is too small, hover over the year on the top and click the bu
 * Fixes
   * Comments field now updates correctly and is stored in database for each specific slab
   * Clicking on the year now displays a more clear image, even for concatenated images
+### [3.0.2] - 2024-10-24
+* Changes
+ * Cropping application now outputs PNG to preserve as much information as possible
+ * Slab classification application supports both PNG and JPG for grandfathering purposes
