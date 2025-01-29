@@ -82,6 +82,20 @@ class HorizontalJoint:
                    (min([subjoint.y1 for subjoint in self.subjoints])))
 
 
+    def get_leftmost_point(self) -> tuple:
+        """Gets the leftmost point of the horizontal joint.
+
+        
+        Returns:
+            tuple: (x, y) of the leftmost point of the horizontal joint
+        """
+        ret = None
+        for subjoint in self.subjoints:
+            if ret is None or subjoint.x1 < ret[0]:
+                ret = (subjoint.x1, subjoint.y1)
+        return ret
+    
+
     def get_max_x(self) -> int:
         """Gets the maximum x value of the horizontal joint.
 

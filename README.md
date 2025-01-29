@@ -55,7 +55,7 @@ In the specified `<year>` folder, a `Slabs` folder will be created/overriden wit
 * If you only want to crop the images without updating the database, run the function  `-f crop-only`.
 * By default, an upsert is done (so if record exists, it will update the fields of the entry and not overwrite slab annotations). If you want to completely drop all previous entries for the particular segment for the particular year, add the `--overwrite` flag. 
 ### Including Segmentation Images and Crack Length for Each Slab
-* Run the `predict_folder.py` script in the `DL_Crack_Segmentation` repository (seperate from this application) and name the output folder `Segmentation` to be used as input later.
+* Run the `predict_folder.py` script in the `DL_Crack_Segmentation` repository (seperate from this application) and name the output folder `Segmentation` to be used as input later. Ensure the output images are in `png`. 
 * To the `--mode` argument in the command line to run the crop app, add `segmentation`.
 * The script will then crop all the images first, then calculate the crack lengths and updates the database accordingly. The crack calculations themselves will take a bit of time. If you are not interested in getting the crack lengths, you can safely interrupt the execution of the script.
 
