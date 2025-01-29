@@ -182,6 +182,8 @@ class YearPanelController(QObject):
         else: 
             img_path = os.path.join(img_dir, f'{slab_index}.jpg')
             if not os.path.exists(img_path):
+                img_path = os.path.join(img_dir, f'{slab_index}.png')
+            if not os.path.exists(img_path):
                 raise Exception(f'Slab Image Not Found')
             img = cv2.imread(img_path)
         if convertToQtImage:

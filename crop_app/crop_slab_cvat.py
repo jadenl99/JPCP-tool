@@ -76,7 +76,7 @@ class CropSlabsCVAT:
                                 'Slabs', 'output_segmentation')
         num_files = len(os.listdir(img_path))
         for i in tqdm(range(1, num_files + 1), desc='Calculating crack stats'):
-            p = os.path.join(img_path, f'{str(i)}.jpg')
+            p = os.path.join(img_path, f'{str(i)}{IMG_EXT}')
             img = cv2.imread(p)
             gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)   
             ret, binary_img = cv2.threshold(gray_img, 127, 255, cv2.THRESH_BINARY)
@@ -96,6 +96,7 @@ class CropSlabsCVAT:
             self.slab_inventory.add_crack_stats(i, total_length, avg_width, median_width,
                                             self.seg_str, self.year)
 
+
         
     def crop(self):
         """Algorithm to crop slabs from the dataset. 
@@ -104,7 +105,7 @@ class CropSlabsCVAT:
         
         with open(self.file_manager.csv_path, 'w', newline='') as range_csv:
 
-            fields = ["slab_index", "length (mm)", "width (mm)", 
+            fields = ["slab_index", "length (mm)", "left_length (mm)", "width (mm)", 
                       "start_im", "end_im", "y_offset (mm)",
                       "y_min (mm)", "y_max (mm)"]
             writer = csv.DictWriter(range_csv, fieldnames=fields)
@@ -350,9 +351,10 @@ class CropSlabsCVAT:
 
         px_width = bottom_joint.get_max_x() - bottom_joint.get_min_x()
         px_length = bottom_joint.get_y_midpoint() - top_joint.get_y_midpoint()
-
+        px_left_length = bottom_joint.get_leftmost_point()[1] - top_joint.get_leftmost_point()[1]
         mm_width = float(px_width) / self.scaler.scale_factor_x
         mm_length = float(px_length) / self.scaler.scale_factor_y
+        mm_left_length = float(px_left_length) / self.scaler.scale_factor_y 
         round(mm_width, 2)
         round(mm_length, 2)
 
@@ -378,6 +380,7 @@ class CropSlabsCVAT:
             writer.writerow({
                             "slab_index": self.slab_num,
                             "length (mm)": mm_length,
+                            "left_length (mm)": mm_left_length, 
                             "width (mm)": mm_width,
                             "start_im": input_files[bottom_img_index],
                             "end_im": input_files[top_img_index],      
