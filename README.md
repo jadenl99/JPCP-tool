@@ -69,13 +69,14 @@ Registration data will be stored in the database.
 
 ## Step 4: Slab Classification
 ### Setting up the File System
-This application uses the same file system as the previous steps used to prepare the data. The filesystem should look something like this:
+This application uses the same file system as the previous steps used to prepare the data. If you are only interested in running the classification/visualization tool, ignore the first three steps (given that you have the necessary cropped files). The filesystem should look something like this, which shows the files needed to sufficiently run the slab visualization/classification tool:
 ```
 ├───<data>
 │   ├───2014
 │   │   ├───Slabs
 │   │   │   └───output_intensity
 │   │   │   └───output_range
+│   │   │   └───output_segmentation (optional)
 │   ├───2015
 │   ├───2016
 │   ├───... (continue with all the years to register)
