@@ -107,7 +107,7 @@ class YearPanelController(QObject):
         """
         index = self._year_panel_model.slab_id_list_index
         self._year_panel_model.patched_spall[index] = is_patched_spall
-        self._year_panel_model.panel_updated
+        self._year_panel_model.panel_updated = True
 
 
     @pyqtSlot(bool)
